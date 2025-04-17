@@ -1,0 +1,15 @@
+Ideen zur Visualisierung:
+    Stadtteile:
+        - Chord
+        - Heatmap
+        - 
+
+Auswertung/Analyse:
+    - Quell- und Zielverkehr
+    - frequentierte Zielorte
+    - Verkehrsmittelmix
+    - Überlastungen
+
+Interpretation (Bonus):
+    - Analyse der Verkehrsströme
+    - Modalsplit
