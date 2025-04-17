@@ -5,7 +5,7 @@ import time
 # Mapbox API Key
 MAPBOX_API_KEY = "pk.eyJ1IjoiemViYTEwMTEiLCJhIjoiY205bDZ5YWExMDJkZDJpczY4Zm0yNHBzZSJ9.Em0xTM5AR9yaJZeF-6yYHA"
 
-# Eingabedatei (Wird erstmal überschritten)
+# Eingabedatei (Wird erstmal überschrieben und dann im Ordner Data abgespeichert; Zur Datensicherung)
 CSV_FILE = "wegetagebuch_karlsruhe.csv"
 
 def geocode_location(location, proximity="Karlsruhe, Germany"):
