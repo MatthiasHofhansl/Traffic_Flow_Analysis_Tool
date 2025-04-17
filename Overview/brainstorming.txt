@@ -6,7 +6,7 @@ Ideen zur Visualisierung:
 
 Auswertung/Analyse:
     - Quell- und Zielverkehr
-    - frequentierte Zielorte
+    - Frequentierte Zielorte
     - Verkehrsmittelmix
     - Überlastungen
 
