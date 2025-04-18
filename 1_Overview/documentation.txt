@@ -1,0 +1,10 @@
+Aufbau der Präsentation
+    1. Hinzufügen
+        - Geodaten CSV
+        - Mapbox Api key
+    2. Kritische Schwierigkeiten: Shapefile einbinden und auslesen
+        - shp-Date: Bereitgestellter Shapefile Ordner der Stadt Karlsruhe war nicht strukturiert, 
+                    Stadtteile und Stadtviertel warnen vermischt (nur Stadtteilen wurden berücksichtigt)
+                    -> Umgang nicht intuitiv
+                    -> Ausgabe der Attributtabelle durch dataframe_helper.py
+    3. Fehlende Angaben ergänzen
