@@ -44,13 +44,11 @@ gdf_ziel = gpd.GeoDataFrame(
 
 # === Räumlicher Join: Startorte
 joined_start = gpd.sjoin(gdf_start, gdf_stadtteile, how="left", predicate="within")
-# Vermutlich ist der Spaltenname für den Stadtteil „st_name“ oder ähnlich
-# Ersetze ihn ggf. durch den korrekten Spaltennamen
-df["Stadtteil Start"] = joined_start["st_name"]
+df["Stadtteil Start"] = joined_start["NAME"]
 
 # === Räumlicher Join: Zielorte
 joined_ziel = gpd.sjoin(gdf_ziel, gdf_stadtteile, how="left", predicate="within")
-df["Stadtteil Ziel"] = joined_ziel["st_name"]
+df["Stadtteil Ziel"] = joined_ziel["NAME"]
 
 # === Geometriespalte entfernen
 df.drop(columns=["geometry"], inplace=True, errors="ignore")
