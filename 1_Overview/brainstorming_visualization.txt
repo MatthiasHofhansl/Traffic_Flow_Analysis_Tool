@@ -7,6 +7,7 @@
 - Tabelle Verkehrsmittel (Welches am häufigsten?) --> Kreisdiagramm
 - In welcher Stunde werden die meisten Wege gegangen?
 - Heatmaps für Arbeitsziele und Freizeitziele
+- Soziale Schichten und Wohnorte evtl. mit einbringen
 
 💡 Bonusideen:
 - Analyse nach Tageszeit (Berufsverkehr etc.)
