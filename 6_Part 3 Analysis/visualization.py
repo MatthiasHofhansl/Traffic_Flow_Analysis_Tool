@@ -10,11 +10,13 @@ OUTPUT_CSV_PATH = os.path.join("7_Part 4 Graphics", "Stadtteilbeziehungen_Wegean
 OUTPUT_XLSX_PATH = os.path.join("7_Part 4 Graphics", "Stadtteilbeziehungen_Wegeanzahl.xlsx")
 RANKING_CSV_PATH = os.path.join("7_Part 4 Graphics", "Stadtteile_Ranking.csv")
 RANKING_XLSX_PATH = os.path.join("7_Part 4 Graphics", "Stadtteile_Ranking.xlsx")
+ZWECK_CSV_PATH = os.path.join("7_Part 4 Graphics", "Verkehrsaufkommen (Wege)_Wegegründe.csv")
+ZWECK_XLSX_PATH = os.path.join("7_Part 4 Graphics", "Verkehrsaufkommen (Wege)_Wegegründe.xlsx")
 
 # === Daten einlesen
 df = pd.read_csv(CSV_PATH)
 
-# === Nur gültige Kombinationen (keine NaNs)
+# === Nur gültige Kombinationen (keine NaNs bei Start und Ziel)
 df_valid = df.dropna(subset=["Stadtteil Start", "Stadtteil Ziel"])
 
 # === Gruppieren und zählen (Start-Ziel-Beziehungen)
@@ -73,32 +75,27 @@ for column_cells in ws.columns:
 ws.auto_filter.ref = ws.dimensions
 wb.save(OUTPUT_XLSX_PATH)
 
-# === NEU: Separates Stadtteil-Ranking (Starts und Ziele getrennt)
+# === Separates Stadtteil-Ranking (Starts und Ziele getrennt)
 
-# Start-Stadtteile zählen und sortieren
+# Start-Stadtteile zählen
 start_ranking = df_valid["Stadtteil Start"].value_counts().reset_index()
-start_ranking.columns = ["Stadtteil", "Anzahl Starts"]
+start_ranking.columns = ["Start Stadtteil", "Anzahl Starts"]
 
-# Ziel-Stadtteile zählen und sortieren
+# Ziel-Stadtteile zählen
 ziel_ranking = df_valid["Stadtteil Ziel"].value_counts().reset_index()
-ziel_ranking.columns = ["Stadtteil", "Anzahl Ziele"]
+ziel_ranking.columns = ["Ziel Stadtteil", "Anzahl Ziele"]
 
-# Beide Rankings separat behandeln
-# Zusammenfügen (linke Seite Start, rechte Seite Ziel)
-ranking_df = pd.DataFrame()
-
+# Zusammenfügen (getrennte Spalten, gleiche Zeilenzahl)
 max_len = max(len(start_ranking), len(ziel_ranking))
-
-# Start-Ranking auffüllen
 start_ranking = start_ranking.reindex(range(max_len))
-# Ziel-Ranking auffüllen
 ziel_ranking = ziel_ranking.reindex(range(max_len))
 
-# Zusammenbauen
-ranking_df["Start Stadtteil"] = start_ranking["Stadtteil"]
-ranking_df["Anzahl Starts"] = start_ranking["Anzahl Starts"]
-ranking_df["Ziel Stadtteil"] = ziel_ranking["Stadtteil"]
-ranking_df["Anzahl Ziele"] = ziel_ranking["Anzahl Ziele"]
+ranking_df = pd.DataFrame({
+    "Start Stadtteil": start_ranking["Start Stadtteil"],
+    "Anzahl Starts": start_ranking["Anzahl Starts"],
+    "Ziel Stadtteil": ziel_ranking["Ziel Stadtteil"],
+    "Anzahl Ziele": ziel_ranking["Anzahl Ziele"]
+})
 
 # === Ranking speichern
 ranking_df.to_csv(RANKING_CSV_PATH, index=False, encoding='utf-8-sig')
@@ -125,4 +122,44 @@ for column_cells in ws_rank.columns:
 ws_rank.auto_filter.ref = ws_rank.dimensions
 wb_rank.save(RANKING_XLSX_PATH)
 
-print("✅ Alle Dateien erfolgreich erstellt und gespeichert (mit getrennten Rankings für Starts und Ziele).")
+# === NEU: Analyse Zweck der Wege
+
+# Nur gültige Zwecke verwenden
+zweck_valid = df.dropna(subset=["Zweck"])
+
+# Gruppieren und Prozent berechnen
+zweck_counts = (
+    zweck_valid["Zweck"].value_counts(normalize=True) * 100
+).reset_index()
+
+zweck_counts.columns = ["Zweck", "Prozentuale Verteilung"]
+
+# Werte auf 2 Nachkommastellen runden
+zweck_counts["Prozentuale Verteilung"] = zweck_counts["Prozentuale Verteilung"].round(2)
+
+# === Zweck-Dateien speichern
+zweck_counts.to_csv(ZWECK_CSV_PATH, index=False, encoding='utf-8-sig')
+zweck_counts.to_excel(ZWECK_XLSX_PATH, index=False)
+
+# === XLSX-Formatierung für Zweck
+wb_zweck = load_workbook(ZWECK_XLSX_PATH)
+ws_zweck = wb_zweck.active
+
+for cell in ws_zweck[1]:
+    cell.font = Font(bold=True)
+    cell.alignment = Alignment(horizontal='center')
+
+for column_cells in ws_zweck.columns:
+    max_length = 0
+    column = column_cells[0].column_letter
+    for cell in column_cells:
+        if cell.value:
+            max_length = max(max_length, len(str(cell.value)))
+    ws_zweck.column_dimensions[column].width = max_length + 2
+    for cell in column_cells:
+        cell.alignment = Alignment(horizontal='center')
+
+ws_zweck.auto_filter.ref = ws_zweck.dimensions
+wb_zweck.save(ZWECK_XLSX_PATH)
+
+print("✅ Alle Dateien erfolgreich erstellt und gespeichert (inkl. Analyse der Wegegründe).")
