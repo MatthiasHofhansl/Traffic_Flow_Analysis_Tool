@@ -40,5 +40,27 @@ Aufbau der Präsentation
 
                 In echten realen Daten (z.B. Pendlerströme) wäre das sehr unwahrscheinlich.
 
+        - 3. Aufteilung der Wegezwecke
+
+        - 4. Wie viele Prozent der Wege waren multimodal?
+
+        - 5. Aufteilung der Verkehrsmittel
+
+        - 6. Durchschnittliche Entfernung
+
+        - 7. Wo wohnen die meisten Menschen?
+
+        - 8. Aufteilung Haushaltstypen?
+
+        - 9. Aufteilung Berufe?
+
+        - 10. Aufteilung Wege Geschlechter?
+
+        - 11. Durchschnittsalter der Menschen?
+
+        - 12. Anzahl aufgezeichneter Wege
+
+        - 13. Heatmaps von 4.1 und 4.2
+
 
         
