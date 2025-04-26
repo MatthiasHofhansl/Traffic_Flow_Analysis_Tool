@@ -5,28 +5,32 @@ from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 
-# === Pfade ===
+# === Hauptpfade ===
+BASE_FOLDER = "7_Part 4 Graphics and tables"
+CSV_FOLDER = os.path.join(BASE_FOLDER, "csv-files")
+XLSX_FOLDER = os.path.join(BASE_FOLDER, "xlsx-files")
+PNG_FOLDER = os.path.join(BASE_FOLDER, "png-files")
+
+# === Dateienpfade ===
 CSV_PATH = os.path.join("3_Data for analysis", "wegetagebuch_karlsruhe_koordinaten.csv")
-OUTPUT_FOLDER = "7_Part 4 Graphics and tables"
 
-# Hauptspeicherpfade
-OUTPUT_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.csv")
-OUTPUT_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.xlsx")
-RANKING_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Stadtteile_Ranking.csv")
-RANKING_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Stadtteile_Ranking.xlsx")
-ZWECK_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Verkehrsaufkommen (Wege)_Wegegründe.csv")
-ZWECK_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Verkehrsaufkommen (Wege)_Wegegründe.xlsx")
-ZWECK_PIE_PATH = os.path.join(OUTPUT_FOLDER, "Verkehrsaufkommen (Wege)_Wegegründe_PieChart.png")
-MULTIMODAL_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Multimodalität.csv")
-MULTIMODAL_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Multimodalität.xlsx")
-MODAL_SPLIT_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Wege.csv")
-MODAL_SPLIT_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Wege.xlsx")
-MODAL_SPLIT_PIE_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Wege.png")
-MODAL_SPLIT_KM_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Personenkilometer.csv")
-MODAL_SPLIT_KM_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Personenkilometer.xlsx")
-MODAL_SPLIT_KM_PIE_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Personenkilometer.png")
+OUTPUT_CSV_PATH = os.path.join(CSV_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.csv")
+OUTPUT_XLSX_PATH = os.path.join(XLSX_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.xlsx")
+RANKING_CSV_PATH = os.path.join(CSV_FOLDER, "Stadtteile_Ranking.csv")
+RANKING_XLSX_PATH = os.path.join(XLSX_FOLDER, "Stadtteile_Ranking.xlsx")
+ZWECK_CSV_PATH = os.path.join(CSV_FOLDER, "Verkehrsaufkommen (Wege)_Wegegründe.csv")
+ZWECK_XLSX_PATH = os.path.join(XLSX_FOLDER, "Verkehrsaufkommen (Wege)_Wegegründe.xlsx")
+ZWECK_PIE_PATH = os.path.join(PNG_FOLDER, "Verkehrsaufkommen (Wege)_Wegegründe_PieChart.png")
+MULTIMODAL_CSV_PATH = os.path.join(CSV_FOLDER, "Multimodalität.csv")
+MULTIMODAL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Multimodalität.xlsx")
+MODAL_SPLIT_CSV_PATH = os.path.join(CSV_FOLDER, "Modal Split_Wege.csv")
+MODAL_SPLIT_XLSX_PATH = os.path.join(XLSX_FOLDER, "Modal Split_Wege.xlsx")
+MODAL_SPLIT_PIE_PATH = os.path.join(PNG_FOLDER, "Modal Split_Wege.png")
+MODAL_SPLIT_KM_CSV_PATH = os.path.join(CSV_FOLDER, "Modal Split_Personenkilometer.csv")
+MODAL_SPLIT_KM_XLSX_PATH = os.path.join(XLSX_FOLDER, "Modal Split_Personenkilometer.xlsx")
+MODAL_SPLIT_KM_PIE_PATH = os.path.join(PNG_FOLDER, "Modal Split_Personenkilometer.png")
 
-# === Hilfsfunktion zur Excel-Formatierung
+# === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
     wb = load_workbook(filepath)
     ws = wb.active
@@ -153,7 +157,7 @@ multimodal_df.to_csv(MULTIMODAL_CSV_PATH, index=False, encoding='utf-8-sig')
 multimodal_df.to_excel(MULTIMODAL_XLSX_PATH, index=False)
 format_excel(MULTIMODAL_XLSX_PATH)
 
-# === 6. Modal Split Wege (Anteile nach Wegen)
+# === 6. Modal Split Wege
 modal_split_valid = df.dropna(subset=["Verkehrsmittel"])
 modal_split = (
     modal_split_valid["Verkehrsmittel"].value_counts(normalize=True) * 100
@@ -166,7 +170,6 @@ modal_split.to_csv(MODAL_SPLIT_CSV_PATH, index=False, encoding='utf-8-sig')
 modal_split.to_excel(MODAL_SPLIT_XLSX_PATH, index=False)
 format_excel(MODAL_SPLIT_XLSX_PATH)
 
-# Farben Modal Split korrekt angepasst auf "zu Fuß"
 farben_dict_modal_split = {
     "Auto": "red",
     "zu Fuß": "deepskyblue",
@@ -217,4 +220,4 @@ plt.title("Modal Split der Personenkilometer")
 plt.savefig(MODAL_SPLIT_KM_PIE_PATH, bbox_inches='tight')
 plt.close()
 
-print("✅ Alle Dateien und Diagramme wurden erfolgreich erstellt und gespeichert.")
+print("✅ Alle Dateien und Diagramme wurden erfolgreich in die richtigen Unterordner gespeichert.")
