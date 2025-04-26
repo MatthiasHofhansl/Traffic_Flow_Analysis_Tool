@@ -20,4 +20,8 @@ Aufbau der Präsentation
         war zunächst als .jpg, aber jetzt als CSV)
         - Danach Code so angepasst, dass wir die CSV auch als Excel-Datei haben, damit wir es später leicht in den Bericht
         einfügen können
+        - Hieraus kann später eine schöne Heatmap erstellt werden
+
+        - Zweite Analyse: Stadtteil Start und Stadtteil Ziel nach Beliebtheit (Also Top-down Ranking) herausbekommen. Hierzu 
+        wieder eine gemeinsame Excel und CSV-Datei erstellen
         
