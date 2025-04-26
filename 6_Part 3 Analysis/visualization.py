@@ -36,6 +36,8 @@ WOHNVIERTEL_CSV_PATH = os.path.join(CSV_FOLDER, "Wohnviertel.csv")
 WOHNVIERTEL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Wohnviertel.xlsx")
 HAUSHALTSTYPEN_CSV_PATH = os.path.join(CSV_FOLDER, "Haushaltstypen.csv")
 HAUSHALTSTYPEN_XLSX_PATH = os.path.join(XLSX_FOLDER, "Haushaltstypen.xlsx")
+BERUF_CSV_PATH = os.path.join(CSV_FOLDER, "Berufe.csv")
+BERUF_XLSX_PATH = os.path.join(XLSX_FOLDER, "Berufe.xlsx")
 
 # === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
@@ -238,7 +240,7 @@ wohnviertel_counts.to_csv(WOHNVIERTEL_CSV_PATH, index=False, encoding='utf-8-sig
 wohnviertel_counts.to_excel(WOHNVIERTEL_XLSX_PATH, index=False)
 format_excel(WOHNVIERTEL_XLSX_PATH)
 
-# === 9. Haushaltstypen Auswertung (NEU)
+# === 9. Haushaltstypen Auswertung
 df_haushalt = df.dropna(subset=["PersonenID", "Haushaltstyp"])
 haushalt_unique = df_haushalt.drop_duplicates(subset=["PersonenID"])
 haushalt_counts = haushalt_unique["Haushaltstyp"].value_counts(normalize=True).reset_index()
@@ -248,5 +250,18 @@ haushalt_counts["Prozentuale Verteilung"] = (haushalt_counts["Prozentuale Vertei
 haushalt_counts.to_csv(HAUSHALTSTYPEN_CSV_PATH, index=False, encoding='utf-8-sig')
 haushalt_counts.to_excel(HAUSHALTSTYPEN_XLSX_PATH, index=False)
 format_excel(HAUSHALTSTYPEN_XLSX_PATH)
+
+print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
+
+# === 10. Berufe Auswertung
+df_beruf = df.dropna(subset=["PersonenID", "Beruf"])
+beruf_unique = df_beruf.drop_duplicates(subset=["PersonenID"])
+beruf_counts = beruf_unique["Beruf"].value_counts(normalize=True).reset_index()
+beruf_counts.columns = ["Beruf", "Prozentuale Verteilung"]
+beruf_counts["Prozentuale Verteilung"] = (beruf_counts["Prozentuale Verteilung"] * 100).round(2)
+
+beruf_counts.to_csv(BERUF_CSV_PATH, index=False, encoding='utf-8-sig')
+beruf_counts.to_excel(BERUF_XLSX_PATH, index=False)
+format_excel(BERUF_XLSX_PATH)
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
