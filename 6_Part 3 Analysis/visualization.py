@@ -38,6 +38,8 @@ HAUSHALTSTYPEN_CSV_PATH = os.path.join(CSV_FOLDER, "Haushaltstypen.csv")
 HAUSHALTSTYPEN_XLSX_PATH = os.path.join(XLSX_FOLDER, "Haushaltstypen.xlsx")
 BERUF_CSV_PATH = os.path.join(CSV_FOLDER, "Berufe.csv")
 BERUF_XLSX_PATH = os.path.join(XLSX_FOLDER, "Berufe.xlsx")
+GESCHLECHTER_CSV_PATH = os.path.join(CSV_FOLDER, "Geschlechter.csv")
+GESCHLECHTER_XLSX_PATH = os.path.join(XLSX_FOLDER, "Geschlechter.xlsx")
 
 # === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
@@ -261,5 +263,16 @@ beruf_counts["Prozentuale Verteilung"] = (beruf_counts["Prozentuale Verteilung"]
 beruf_counts.to_csv(BERUF_CSV_PATH, index=False, encoding='utf-8-sig')
 beruf_counts.to_excel(BERUF_XLSX_PATH, index=False)
 format_excel(BERUF_XLSX_PATH)
+
+# === 11. Geschlechter Auswertung
+df_geschlecht = df.dropna(subset=["PersonenID", "Geschlecht"])
+geschlecht_unique = df_geschlecht.drop_duplicates(subset=["PersonenID"])
+geschlecht_counts = geschlecht_unique["Geschlecht"].value_counts(normalize=True).reset_index()
+geschlecht_counts.columns = ["Geschlecht", "Prozentuale Verteilung"]
+geschlecht_counts["Prozentuale Verteilung"] = (geschlecht_counts["Prozentuale Verteilung"] * 100).round(2)
+
+geschlecht_counts.to_csv(GESCHLECHTER_CSV_PATH, index=False, encoding='utf-8-sig')
+geschlecht_counts.to_excel(GESCHLECHTER_XLSX_PATH, index=False)
+format_excel(GESCHLECHTER_XLSX_PATH)
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
