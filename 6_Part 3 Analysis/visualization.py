@@ -34,6 +34,8 @@ WEGE_DISTANZEN_CSV_PATH = os.path.join(CSV_FOLDER, "Wege und Distanzen.csv")
 WEGE_DISTANZEN_XLSX_PATH = os.path.join(XLSX_FOLDER, "Wege und Distanzen.xlsx")
 WOHNVIERTEL_CSV_PATH = os.path.join(CSV_FOLDER, "Wohnviertel.csv")
 WOHNVIERTEL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Wohnviertel.xlsx")
+HAUSHALTSTYPEN_CSV_PATH = os.path.join(CSV_FOLDER, "Haushaltstypen.csv")
+HAUSHALTSTYPEN_XLSX_PATH = os.path.join(XLSX_FOLDER, "Haushaltstypen.xlsx")
 
 # === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
@@ -220,7 +222,7 @@ gesamt_ergebnis.to_csv(WEGE_DISTANZEN_CSV_PATH, index=False, encoding='utf-8-sig
 gesamt_ergebnis.to_excel(WEGE_DISTANZEN_XLSX_PATH, index=False)
 format_excel(WEGE_DISTANZEN_XLSX_PATH)
 
-# === 8. Wohnviertel Auswertung (NEU)
+# === 8. Wohnviertel Auswertung
 df_wohnviertel = df.dropna(subset=["PersonenID", "Wohnviertel"])
 wohnviertel_unique = df_wohnviertel.drop_duplicates(subset=["PersonenID"])
 wohnviertel_counts = wohnviertel_unique["Wohnviertel"].value_counts().reset_index()
@@ -235,5 +237,16 @@ wohnviertel_counts = pd.concat([
 wohnviertel_counts.to_csv(WOHNVIERTEL_CSV_PATH, index=False, encoding='utf-8-sig')
 wohnviertel_counts.to_excel(WOHNVIERTEL_XLSX_PATH, index=False)
 format_excel(WOHNVIERTEL_XLSX_PATH)
+
+# === 9. Haushaltstypen Auswertung (NEU)
+df_haushalt = df.dropna(subset=["PersonenID", "Haushaltstyp"])
+haushalt_unique = df_haushalt.drop_duplicates(subset=["PersonenID"])
+haushalt_counts = haushalt_unique["Haushaltstyp"].value_counts(normalize=True).reset_index()
+haushalt_counts.columns = ["Haushaltstyp", "Prozentuale Verteilung"]
+haushalt_counts["Prozentuale Verteilung"] = (haushalt_counts["Prozentuale Verteilung"] * 100).round(2)
+
+haushalt_counts.to_csv(HAUSHALTSTYPEN_CSV_PATH, index=False, encoding='utf-8-sig')
+haushalt_counts.to_excel(HAUSHALTSTYPEN_XLSX_PATH, index=False)
+format_excel(HAUSHALTSTYPEN_XLSX_PATH)
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
