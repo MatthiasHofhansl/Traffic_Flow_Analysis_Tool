@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import matplotlib.pyplot as plt
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
@@ -12,6 +13,7 @@ RANKING_CSV_PATH = os.path.join("7_Part 4 Graphics and tables", "Stadtteile_Rank
 RANKING_XLSX_PATH = os.path.join("7_Part 4 Graphics and tables", "Stadtteile_Ranking.xlsx")
 ZWECK_CSV_PATH = os.path.join("7_Part 4 Graphics and tables", "Verkehrsaufkommen (Wege)_Wegegründe.csv")
 ZWECK_XLSX_PATH = os.path.join("7_Part 4 Graphics and tables", "Verkehrsaufkommen (Wege)_Wegegründe.xlsx")
+ZWECK_PIE_PATH = os.path.join("7_Part 4 Graphics and tables", "Verkehrsaufkommen (Wege)_Wegegründe_PieChart.png")
 
 # === Daten einlesen
 df = pd.read_csv(CSV_PATH)
@@ -162,4 +164,38 @@ for column_cells in ws_zweck.columns:
 ws_zweck.auto_filter.ref = ws_zweck.dimensions
 wb_zweck.save(ZWECK_XLSX_PATH)
 
-print("✅ Alle Dateien erfolgreich erstellt und gespeichert (inkl. Analyse der Wegegründe).")
+# === NEU: Kreisdiagramm der Wegezwecke
+
+# Farben definieren
+farben_dict = {
+    "Heimweg": "orchid",         # ausgesucht: violett
+    "Sport": "limegreen",        # ausgesucht: helles grün
+    "Schule/Uni": "navy",        # Dunkelblau
+    "Freizeit": "gold",          # Gelb
+    "Arbeit": "deepskyblue",     # Hellblau
+    "Arztbesuch": "grey",        # Grau
+    "Begleitung": "lightgreen",  # Hellgrün
+    "Erholung": "sandybrown",    # ausgesucht: sandfarben
+    "Einkaufen": "darkred"       # Dunkelrot
+}
+
+# Farben für Plot aufbauen (nach Reihenfolge der Werte)
+farben = [farben_dict.get(zweck, "lightgrey") for zweck in zweck_counts["Zweck"]]
+
+# Plot erstellen
+fig, ax = plt.subplots(figsize=(10, 8))
+ax.pie(
+    zweck_counts["Prozentuale Verteilung"],
+    labels=zweck_counts["Zweck"],
+    autopct="%1.1f%%",
+    startangle=140,
+    colors=farben
+)
+ax.axis('equal')  # Kreis soll rund sein
+plt.title("Prozentuale Verteilung der Wegezwecke")
+
+# Diagramm speichern
+plt.savefig(ZWECK_PIE_PATH, bbox_inches='tight')
+plt.close()
+
+print("✅ Alle Dateien und Diagramme erfolgreich erstellt und gespeichert.")
