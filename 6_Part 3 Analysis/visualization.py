@@ -14,6 +14,8 @@ RANKING_XLSX_PATH = os.path.join("7_Part 4 Graphics and tables", "Stadtteile_Ran
 ZWECK_CSV_PATH = os.path.join("7_Part 4 Graphics and tables", "Verkehrsaufkommen (Wege)_Wegegründe.csv")
 ZWECK_XLSX_PATH = os.path.join("7_Part 4 Graphics and tables", "Verkehrsaufkommen (Wege)_Wegegründe.xlsx")
 ZWECK_PIE_PATH = os.path.join("7_Part 4 Graphics and tables", "Verkehrsaufkommen (Wege)_Wegegründe_PieChart.png")
+MULTIMODAL_CSV_PATH = os.path.join("7_Part 4 Graphics and tables", "Multimodalität.csv")
+MULTIMODAL_XLSX_PATH = os.path.join("7_Part 4 Graphics and tables", "Multimodalität.xlsx")
 
 # === Daten einlesen
 df = pd.read_csv(CSV_PATH)
@@ -50,44 +52,31 @@ if restliche_wege_anzahl > 0:
         })
     ], ignore_index=True)
 
-# === CSV speichern
+# === CSV und XLSX für Stadtteilbeziehungen
 output_df.to_csv(OUTPUT_CSV_PATH, index=False, encoding='utf-8-sig')
-
-# === XLSX speichern
 output_df.to_excel(OUTPUT_XLSX_PATH, index=False)
 
-# === XLSX-Formatierung für Stadtteilbeziehungen
+# === Formatierung Excel (Stadtteilbeziehungen)
 wb = load_workbook(OUTPUT_XLSX_PATH)
 ws = wb.active
-
 for cell in ws[1]:
     cell.font = Font(bold=True)
     cell.alignment = Alignment(horizontal='center')
-
 for column_cells in ws.columns:
-    max_length = 0
-    column = column_cells[0].column_letter
-    for cell in column_cells:
-        if cell.value:
-            max_length = max(max_length, len(str(cell.value)))
-    ws.column_dimensions[column].width = max_length + 2
+    max_length = max(len(str(cell.value)) for cell in column_cells if cell.value)
+    ws.column_dimensions[column_cells[0].column_letter].width = max_length + 2
     for cell in column_cells:
         cell.alignment = Alignment(horizontal='center')
-
 ws.auto_filter.ref = ws.dimensions
 wb.save(OUTPUT_XLSX_PATH)
 
-# === Separates Stadtteil-Ranking (Starts und Ziele getrennt)
-
-# Start-Stadtteile zählen
+# === Stadtteil-Ranking erstellen
 start_ranking = df_valid["Stadtteil Start"].value_counts().reset_index()
 start_ranking.columns = ["Start Stadtteil", "Anzahl Starts"]
 
-# Ziel-Stadtteile zählen
 ziel_ranking = df_valid["Stadtteil Ziel"].value_counts().reset_index()
 ziel_ranking.columns = ["Ziel Stadtteil", "Anzahl Ziele"]
 
-# Zusammenfügen (getrennte Spalten, gleiche Zeilenzahl)
 max_len = max(len(start_ranking), len(ziel_ranking))
 start_ranking = start_ranking.reindex(range(max_len))
 ziel_ranking = ziel_ranking.reindex(range(max_len))
@@ -99,90 +88,60 @@ ranking_df = pd.DataFrame({
     "Anzahl Ziele": ziel_ranking["Anzahl Ziele"]
 })
 
-# === Ranking speichern
 ranking_df.to_csv(RANKING_CSV_PATH, index=False, encoding='utf-8-sig')
 ranking_df.to_excel(RANKING_XLSX_PATH, index=False)
 
-# === XLSX-Formatierung für Ranking
 wb_rank = load_workbook(RANKING_XLSX_PATH)
 ws_rank = wb_rank.active
-
 for cell in ws_rank[1]:
     cell.font = Font(bold=True)
     cell.alignment = Alignment(horizontal='center')
-
 for column_cells in ws_rank.columns:
-    max_length = 0
-    column = column_cells[0].column_letter
-    for cell in column_cells:
-        if cell.value:
-            max_length = max(max_length, len(str(cell.value)))
-    ws_rank.column_dimensions[column].width = max_length + 2
+    max_length = max(len(str(cell.value)) for cell in column_cells if cell.value)
+    ws_rank.column_dimensions[column_cells[0].column_letter].width = max_length + 2
     for cell in column_cells:
         cell.alignment = Alignment(horizontal='center')
-
 ws_rank.auto_filter.ref = ws_rank.dimensions
 wb_rank.save(RANKING_XLSX_PATH)
 
-# === NEU: Analyse Zweck der Wege
-
-# Nur gültige Zwecke verwenden
+# === Analyse Zweck der Wege
 zweck_valid = df.dropna(subset=["Zweck"])
-
-# Gruppieren und Prozent berechnen
 zweck_counts = (
     zweck_valid["Zweck"].value_counts(normalize=True) * 100
 ).reset_index()
-
 zweck_counts.columns = ["Zweck", "Prozentuale Verteilung"]
-
-# Werte auf 2 Nachkommastellen runden
 zweck_counts["Prozentuale Verteilung"] = zweck_counts["Prozentuale Verteilung"].round(2)
 
-# === Zweck-Dateien speichern
 zweck_counts.to_csv(ZWECK_CSV_PATH, index=False, encoding='utf-8-sig')
 zweck_counts.to_excel(ZWECK_XLSX_PATH, index=False)
 
-# === XLSX-Formatierung für Zweck
 wb_zweck = load_workbook(ZWECK_XLSX_PATH)
 ws_zweck = wb_zweck.active
-
 for cell in ws_zweck[1]:
     cell.font = Font(bold=True)
     cell.alignment = Alignment(horizontal='center')
-
 for column_cells in ws_zweck.columns:
-    max_length = 0
-    column = column_cells[0].column_letter
-    for cell in column_cells:
-        if cell.value:
-            max_length = max(max_length, len(str(cell.value)))
-    ws_zweck.column_dimensions[column].width = max_length + 2
+    max_length = max(len(str(cell.value)) for cell in column_cells if cell.value)
+    ws_zweck.column_dimensions[column_cells[0].column_letter].width = max_length + 2
     for cell in column_cells:
         cell.alignment = Alignment(horizontal='center')
-
 ws_zweck.auto_filter.ref = ws_zweck.dimensions
 wb_zweck.save(ZWECK_XLSX_PATH)
 
-# === NEU: Kreisdiagramm der Wegezwecke
-
-# Farben definieren
+# === Kreisdiagramm der Wegezwecke
 farben_dict = {
-    "Heimweg": "orchid",         # ausgesucht: violett
-    "Sport": "limegreen",        # ausgesucht: helles grün
-    "Schule/Uni": "navy",        # Dunkelblau
-    "Freizeit": "gold",          # Gelb
-    "Arbeit": "deepskyblue",     # Hellblau
-    "Arztbesuch": "grey",        # Grau
-    "Begleitung": "lightgreen",  # Hellgrün
-    "Erholung": "sandybrown",    # ausgesucht: sandfarben
-    "Einkaufen": "darkred"       # Dunkelrot
+    "Heimweg": "orchid",
+    "Sport": "limegreen",
+    "Schule/Uni": "navy",
+    "Freizeit": "gold",
+    "Arbeit": "deepskyblue",
+    "Arztbesuch": "grey",
+    "Begleitung": "lightgreen",
+    "Erholung": "sandybrown",
+    "Einkaufen": "darkred"
 }
-
-# Farben für Plot aufbauen (nach Reihenfolge der Werte)
 farben = [farben_dict.get(zweck, "lightgrey") for zweck in zweck_counts["Zweck"]]
 
-# Plot erstellen
 fig, ax = plt.subplots(figsize=(10, 8))
 ax.pie(
     zweck_counts["Prozentuale Verteilung"],
@@ -191,11 +150,39 @@ ax.pie(
     startangle=140,
     colors=farben
 )
-ax.axis('equal')  # Kreis soll rund sein
+ax.axis('equal')
 plt.title("Prozentuale Verteilung der Wegezwecke")
-
-# Diagramm speichern
 plt.savefig(ZWECK_PIE_PATH, bbox_inches='tight')
 plt.close()
 
-print("✅ Alle Dateien und Diagramme erfolgreich erstellt und gespeichert.")
+# === Analyse Multimodalität (NEU, korrekt!)
+multimodal_valid = df.dropna(subset=["Multimodal"])
+# Vergleich in Kleinschreibung
+multimodal_ja = (multimodal_valid["Multimodal"].str.lower() == "ja").sum()
+gesamt = multimodal_valid.shape[0]
+multimodal_prozent = round((multimodal_ja / gesamt) * 100, 2)
+monomodal_prozent = round(100 - multimodal_prozent, 2)
+
+# Tabelle erstellen
+multimodal_df = pd.DataFrame({
+    "Typ": ["Multimodal", "Monomodal"],
+    "Prozentuale Verteilung": [multimodal_prozent, monomodal_prozent]
+})
+
+multimodal_df.to_csv(MULTIMODAL_CSV_PATH, index=False, encoding='utf-8-sig')
+multimodal_df.to_excel(MULTIMODAL_XLSX_PATH, index=False)
+
+wb_multi = load_workbook(MULTIMODAL_XLSX_PATH)
+ws_multi = wb_multi.active
+for cell in ws_multi[1]:
+    cell.font = Font(bold=True)
+    cell.alignment = Alignment(horizontal='center')
+for column_cells in ws_multi.columns:
+    max_length = max(len(str(cell.value)) for cell in column_cells if cell.value)
+    ws_multi.column_dimensions[column_cells[0].column_letter].width = max_length + 2
+    for cell in column_cells:
+        cell.alignment = Alignment(horizontal='center')
+ws_multi.auto_filter.ref = ws_multi.dimensions
+wb_multi.save(MULTIMODAL_XLSX_PATH)
+
+print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
