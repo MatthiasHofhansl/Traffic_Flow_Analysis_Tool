@@ -52,16 +52,14 @@ output_df.to_csv(OUTPUT_CSV_PATH, index=False, encoding='utf-8-sig')
 # === XLSX speichern
 output_df.to_excel(OUTPUT_XLSX_PATH, index=False)
 
-# === XLSX-Formatierung (für Stadtteilbeziehungen)
+# === XLSX-Formatierung für Stadtteilbeziehungen
 wb = load_workbook(OUTPUT_XLSX_PATH)
 ws = wb.active
 
-# Kopfzeile fett und zentriert
 for cell in ws[1]:
     cell.font = Font(bold=True)
     cell.alignment = Alignment(horizontal='center')
 
-# Zellen zentrieren und Spaltenbreiten anpassen
 for column_cells in ws.columns:
     max_length = 0
     column = column_cells[0].column_letter
@@ -72,44 +70,48 @@ for column_cells in ws.columns:
     for cell in column_cells:
         cell.alignment = Alignment(horizontal='center')
 
-# Auto-Filter setzen
 ws.auto_filter.ref = ws.dimensions
-
-# Speichern der formatierten XLSX
 wb.save(OUTPUT_XLSX_PATH)
 
-# === NEU: Ranking der Stadtteile erstellen ===
+# === NEU: Separates Stadtteil-Ranking (Starts und Ziele getrennt)
 
-# Start-Stadtteile zählen
+# Start-Stadtteile zählen und sortieren
 start_ranking = df_valid["Stadtteil Start"].value_counts().reset_index()
 start_ranking.columns = ["Stadtteil", "Anzahl Starts"]
 
-# Ziel-Stadtteile zählen
+# Ziel-Stadtteile zählen und sortieren
 ziel_ranking = df_valid["Stadtteil Ziel"].value_counts().reset_index()
 ziel_ranking.columns = ["Stadtteil", "Anzahl Ziele"]
 
-# Zusammenführen
-ranking = pd.merge(start_ranking, ziel_ranking, on="Stadtteil", how="outer").fillna(0)
-ranking["Anzahl Starts"] = ranking["Anzahl Starts"].astype(int)
-ranking["Anzahl Ziele"] = ranking["Anzahl Ziele"].astype(int)
+# Beide Rankings separat behandeln
+# Zusammenfügen (linke Seite Start, rechte Seite Ziel)
+ranking_df = pd.DataFrame()
 
-# Nach Starts oder Zielen sortieren (du kannst auch nach Summe sortieren, wenn du willst)
-ranking = ranking.sort_values(by=["Anzahl Starts", "Anzahl Ziele"], ascending=False)
+max_len = max(len(start_ranking), len(ziel_ranking))
+
+# Start-Ranking auffüllen
+start_ranking = start_ranking.reindex(range(max_len))
+# Ziel-Ranking auffüllen
+ziel_ranking = ziel_ranking.reindex(range(max_len))
+
+# Zusammenbauen
+ranking_df["Start Stadtteil"] = start_ranking["Stadtteil"]
+ranking_df["Anzahl Starts"] = start_ranking["Anzahl Starts"]
+ranking_df["Ziel Stadtteil"] = ziel_ranking["Stadtteil"]
+ranking_df["Anzahl Ziele"] = ziel_ranking["Anzahl Ziele"]
 
 # === Ranking speichern
-ranking.to_csv(RANKING_CSV_PATH, index=False, encoding='utf-8-sig')
-ranking.to_excel(RANKING_XLSX_PATH, index=False)
+ranking_df.to_csv(RANKING_CSV_PATH, index=False, encoding='utf-8-sig')
+ranking_df.to_excel(RANKING_XLSX_PATH, index=False)
 
-# === XLSX-Formatierung (für Stadtteile-Ranking)
+# === XLSX-Formatierung für Ranking
 wb_rank = load_workbook(RANKING_XLSX_PATH)
 ws_rank = wb_rank.active
 
-# Kopfzeile fett und zentriert
 for cell in ws_rank[1]:
     cell.font = Font(bold=True)
     cell.alignment = Alignment(horizontal='center')
 
-# Zellen zentrieren und Spaltenbreiten anpassen
 for column_cells in ws_rank.columns:
     max_length = 0
     column = column_cells[0].column_letter
@@ -120,10 +122,7 @@ for column_cells in ws_rank.columns:
     for cell in column_cells:
         cell.alignment = Alignment(horizontal='center')
 
-# Auto-Filter setzen
 ws_rank.auto_filter.ref = ws_rank.dimensions
-
-# Speichern der formatierten Ranking-XLSX
 wb_rank.save(RANKING_XLSX_PATH)
 
-print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
+print("✅ Alle Dateien erfolgreich erstellt und gespeichert (mit getrennten Rankings für Starts und Ziele).")
