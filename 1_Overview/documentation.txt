@@ -49,7 +49,7 @@ Aufbau der Präsentation
         - 4. Wie viele Prozent der Wege waren multimodal? Done! Nach einem kleinen Fehler. Ungenau gearbeitet "Ja" ist nicht "ja"!
 
         - 5. Aufteilung der Verkehrsmittel: Das bedeutet Modal Split der Wege und der Personenkilometer (Angaben in Prozent). Bsp.:
-        Wie viel Prozent der Wege wurden mit dem Auto gefahren?
+        Wie viel Prozent der Wege wurden mit dem Auto gefahren? Danach Visualisierung mit Pie Chart
 
         - 6. Durchschnittliche Entfernung
 

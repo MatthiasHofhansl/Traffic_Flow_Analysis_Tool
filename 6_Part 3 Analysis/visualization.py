@@ -20,6 +20,7 @@ MULTIMODAL_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Multimodalität.csv")
 MULTIMODAL_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Multimodalität.xlsx")
 MODAL_SPLIT_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Wege.csv")
 MODAL_SPLIT_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Wege.xlsx")
+MODAL_SPLIT_PIE_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Wege.png")
 
 # === Hilfsfunktion zur Excel-Formatierung
 def format_excel(filepath):
@@ -39,22 +40,7 @@ def format_excel(filepath):
 # === Daten einlesen
 df = pd.read_csv(CSV_PATH)
 
-# === Modal Split (NEU)
-modal_split_valid = df.dropna(subset=["Verkehrsmittel"])
-
-modal_split = (
-    modal_split_valid["Verkehrsmittel"].value_counts(normalize=True) * 100
-).reset_index()
-
-modal_split.columns = ["Verkehrsmittel", "Prozentuale Verteilung"]
-modal_split["Prozentuale Verteilung"] = modal_split["Prozentuale Verteilung"].round(2)
-
-# Speichern
-modal_split.to_csv(MODAL_SPLIT_CSV_PATH, index=False, encoding='utf-8-sig')
-modal_split.to_excel(MODAL_SPLIT_XLSX_PATH, index=False)
-format_excel(MODAL_SPLIT_XLSX_PATH)
-
-# === Stadtteilbeziehungen
+# === 1. Stadtteilbeziehungen
 df_valid = df.dropna(subset=["Stadtteil Start", "Stadtteil Ziel"])
 weg_counts = (
     df_valid.groupby(["Stadtteil Start", "Stadtteil Ziel"])
@@ -85,7 +71,7 @@ output_df.to_csv(OUTPUT_CSV_PATH, index=False, encoding='utf-8-sig')
 output_df.to_excel(OUTPUT_XLSX_PATH, index=False)
 format_excel(OUTPUT_XLSX_PATH)
 
-# === Stadtteile Ranking
+# === 2. Stadtteile-Ranking
 start_ranking = df_valid["Stadtteil Start"].value_counts().reset_index()
 start_ranking.columns = ["Start Stadtteil", "Anzahl Starts"]
 
@@ -107,7 +93,7 @@ ranking_df.to_csv(RANKING_CSV_PATH, index=False, encoding='utf-8-sig')
 ranking_df.to_excel(RANKING_XLSX_PATH, index=False)
 format_excel(RANKING_XLSX_PATH)
 
-# === Wegezwecke Analyse
+# === 3. Wegezwecke Analyse
 zweck_valid = df.dropna(subset=["Zweck"])
 zweck_counts = (
     zweck_valid["Zweck"].value_counts(normalize=True) * 100
@@ -119,8 +105,8 @@ zweck_counts.to_csv(ZWECK_CSV_PATH, index=False, encoding='utf-8-sig')
 zweck_counts.to_excel(ZWECK_XLSX_PATH, index=False)
 format_excel(ZWECK_XLSX_PATH)
 
-# === Kreisdiagramm Wegezwecke
-farben_dict = {
+# === 4. Kreisdiagramm Wegezwecke
+farben_dict_zwecke = {
     "Heimweg": "orchid",
     "Sport": "limegreen",
     "Schule/Uni": "navy",
@@ -132,7 +118,7 @@ farben_dict = {
     "Einkaufen": "darkred"
 }
 
-farben = [farben_dict.get(zweck, "lightgrey") for zweck in zweck_counts["Zweck"]]
+farben = [farben_dict_zwecke.get(zweck, "lightgrey") for zweck in zweck_counts["Zweck"]]
 
 fig, ax = plt.subplots(figsize=(10, 8))
 ax.pie(
@@ -147,7 +133,7 @@ plt.title("Prozentuale Verteilung der Wegezwecke")
 plt.savefig(ZWECK_PIE_PATH, bbox_inches='tight')
 plt.close()
 
-# === Multimodalität Analyse
+# === 5. Multimodalität Analyse
 multimodal_valid = df.dropna(subset=["Multimodal"])
 multimodal_ja = (multimodal_valid["Multimodal"].str.lower() == "ja").sum()
 gesamt = multimodal_valid.shape[0]
@@ -163,4 +149,42 @@ multimodal_df.to_csv(MULTIMODAL_CSV_PATH, index=False, encoding='utf-8-sig')
 multimodal_df.to_excel(MULTIMODAL_XLSX_PATH, index=False)
 format_excel(MULTIMODAL_XLSX_PATH)
 
-print("✅ Alle Dateien und Analysen erfolgreich erstellt und gespeichert.")
+# === 6. Modal Split Analyse
+modal_split_valid = df.dropna(subset=["Verkehrsmittel"])
+modal_split = (
+    modal_split_valid["Verkehrsmittel"].value_counts(normalize=True) * 100
+).reset_index()
+
+modal_split.columns = ["Verkehrsmittel", "Prozentuale Verteilung"]
+modal_split["Prozentuale Verteilung"] = modal_split["Prozentuale Verteilung"].round(2)
+
+modal_split.to_csv(MODAL_SPLIT_CSV_PATH, index=False, encoding='utf-8-sig')
+modal_split.to_excel(MODAL_SPLIT_XLSX_PATH, index=False)
+format_excel(MODAL_SPLIT_XLSX_PATH)
+
+# === 7. Kreisdiagramm Modal Split
+farben_dict_modal_split = {
+    "Auto": "red",
+    "Zu Fuß": "deepskyblue",
+    "Fahrrad": "navy",
+    "ÖPNV": "green",
+    "Multimodal": "orange",
+    "E-Scooter": "purple"
+}
+
+farben_modal = [farben_dict_modal_split.get(vm, "lightgrey") for vm in modal_split["Verkehrsmittel"]]
+
+fig, ax = plt.subplots(figsize=(10, 8))
+ax.pie(
+    modal_split["Prozentuale Verteilung"],
+    labels=modal_split["Verkehrsmittel"],
+    autopct="%1.1f%%",
+    startangle=140,
+    colors=farben_modal
+)
+ax.axis('equal')
+plt.title("Modal Split der Wege")
+plt.savefig(MODAL_SPLIT_PIE_PATH, bbox_inches='tight')
+plt.close()
+
+print("✅ Alle Analysen, Tabellen und Diagramme wurden erfolgreich erstellt und gespeichert.")
