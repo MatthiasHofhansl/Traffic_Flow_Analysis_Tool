@@ -18,4 +18,6 @@ Aufbau der Präsentation
         - Erste Analyse: Anzahl der Wege von einem Stadtteil in den anderen Stadtteil zählen (Probleme: Viele Kombinationsmöglichkeiten
         der Stadtteile, daher haben wir uns auf alle Beziehungen mit Wegeanzahl größer oder gleich 20 spezialisiert; Abspeicherung
         war zunächst als .jpg, aber jetzt als CSV)
+        - Danach Code so angepasst, dass wir die CSV auch als Excel-Datei haben, damit wir es später leicht in den Bericht
+        einfügen können
         
