@@ -51,7 +51,8 @@ Aufbau der Präsentation
         - 5. Aufteilung der Verkehrsmittel: Das bedeutet Modal Split der Wege und der Personenkilometer (Angaben in Prozent). Bsp.:
         Wie viel Prozent der Wege wurden mit dem Auto gefahren? Danach Visualisierung mit Pie Chart
 
-        - 6. Durchschnittliche Entfernung: Jede Person hat eigene IDs und jetzt möchten wir natürlich analysieren wie viele
+        - 6. Durchschnittliche Wegelänge pro Tag; Durchscnittlich Zurückgelegte Tagesstrecke; Durchschnittliche Anzahl an Wegen pro
+        Tag: Jede Person hat eigene IDs und jetzt möchten wir natürlich analysieren wie viele
         Kilometer die Personen durchschnittlich pro Tag zurückgelegt haben
 
         - 7. Wo wohnen die meisten Menschen?
@@ -69,6 +70,8 @@ Aufbau der Präsentation
         - 13. Heatmaps von 4.1 und 4.2
 
         - 14. Anzahl von befragten Personen?
+
+        - 15. In welchem Zeitraum wurden die Wege erfasst?
 
 
         
