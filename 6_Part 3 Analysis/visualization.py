@@ -40,6 +40,8 @@ BERUF_CSV_PATH = os.path.join(CSV_FOLDER, "Berufe.csv")
 BERUF_XLSX_PATH = os.path.join(XLSX_FOLDER, "Berufe.xlsx")
 GESCHLECHTER_CSV_PATH = os.path.join(CSV_FOLDER, "Geschlechter.csv")
 GESCHLECHTER_XLSX_PATH = os.path.join(XLSX_FOLDER, "Geschlechter.xlsx")
+ALTER_CSV_PATH = os.path.join(CSV_FOLDER, "Durchschnittsalter.csv")
+ALTER_XLSX_PATH = os.path.join(XLSX_FOLDER, "Durchschnittsalter.xlsx")
 
 # === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
@@ -274,5 +276,16 @@ geschlecht_counts["Prozentuale Verteilung"] = (geschlecht_counts["Prozentuale Ve
 geschlecht_counts.to_csv(GESCHLECHTER_CSV_PATH, index=False, encoding='utf-8-sig')
 geschlecht_counts.to_excel(GESCHLECHTER_XLSX_PATH, index=False)
 format_excel(GESCHLECHTER_XLSX_PATH)
+
+# === 12. Durchschnittsalter Auswertung
+df_alter = df.dropna(subset=["PersonenID", "Alter"])
+alter_unique = df_alter.drop_duplicates(subset=["PersonenID"])
+durchschnittsalter = alter_unique["Alter"].mean().round(2)
+
+alter_df = pd.DataFrame({"Durchschnittsalter": [durchschnittsalter]})
+
+alter_df.to_csv(ALTER_CSV_PATH, index=False, encoding='utf-8-sig')
+alter_df.to_excel(ALTER_XLSX_PATH, index=False)
+format_excel(ALTER_XLSX_PATH)
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
