@@ -46,9 +46,10 @@ Aufbau der Präsentation
 
         Hier kam der Gedanke die Eingangsdaten nochmal durch KI anpassen zu lassen und mit einer persönlicheren Note zu versehen.
 
-        - 4. Wie viele Prozent der Wege waren multimodal?
+        - 4. Wie viele Prozent der Wege waren multimodal? Done! Nach einem kleinen Fehler. Ungenau gearbeitet "Ja" ist nicht "ja"!
 
-        - 5. Aufteilung der Verkehrsmittel
+        - 5. Aufteilung der Verkehrsmittel: Das bedeutet Modal Split der Wege und der Personenkilometer (Angaben in Prozent). Bsp.:
+        Wie viel Prozent der Wege wurden mit dem Auto gefahren?
 
         - 6. Durchschnittliche Entfernung
 
