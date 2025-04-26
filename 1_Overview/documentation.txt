@@ -15,4 +15,7 @@ Aufbau der Präsentation
             -> nearest
             => 1808 Einträge wurden korrigiert
     4. Datenanalyse und Visualisierung
+        - Erste Analyse: Anzahl der Wege von einem Stadtteil in den anderen Stadtteil zählen (Probleme: Viele Kombinationsmöglichkeiten
+        der Stadtteile, daher haben wir uns auf alle Beziehungen mit Wegeanzahl größer oder gleich 20 spezialisiert; Abspeicherung
+        war zunächst als .jpg, aber jetzt als CSV)
         

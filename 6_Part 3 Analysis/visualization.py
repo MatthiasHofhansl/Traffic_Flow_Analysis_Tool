@@ -1,10 +1,9 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
 
 # === Pfade ===
 CSV_PATH = os.path.join("3_Data for analysis", "wegetagebuch_karlsruhe_koordinaten.csv")
-OUTPUT_PATH = os.path.join("7_Part 4 Graphics", "start_ziel_wege.jpg")
+OUTPUT_PATH = os.path.join("7_Part 4 Graphics", "Stadtteilbeziehungen_Wegeanzahl.csv")
 
 # === Daten einlesen
 df = pd.read_csv(CSV_PATH)
@@ -20,25 +19,29 @@ weg_counts = (
     .sort_values(by="Anzahl Wege", ascending=False)
 )
 
-# === Plot vorbereiten
-fig, ax = plt.subplots(figsize=(14, 10))
-ax.axis('tight')
-ax.axis('off')
+# === Trennung: häufige vs. seltene Verbindungen
+mask_häufig = weg_counts["Anzahl Wege"] >= 20
+weg_counts_häufig = weg_counts[mask_häufig]
+weg_counts_selten = weg_counts[~mask_häufig]
 
-# === Tabelle plotten
-table = ax.table(
-    cellText=weg_counts.values,
-    colLabels=weg_counts.columns,
-    cellLoc='center',
-    loc='center'
-)
+# === Restliche Wege zusammenfassen
+restliche_wege_anzahl = weg_counts_selten["Anzahl Wege"].sum()
 
-table.auto_set_font_size(False)
-table.set_fontsize(10)
-table.scale(1.2, 1.5)
+# === DataFrame für Ausgabe vorbereiten
+output_df = weg_counts_häufig.copy()
 
-# === Speichern
-plt.savefig(OUTPUT_PATH, bbox_inches='tight')
-plt.close()
+# Zeile für restliche Wege ergänzen, falls vorhanden
+if restliche_wege_anzahl > 0:
+    output_df = pd.concat([
+        output_df,
+        pd.DataFrame({
+            "Stadtteil Start": ["Restliche Wege"],
+            "Stadtteil Ziel": [""],
+            "Anzahl Wege": [restliche_wege_anzahl]
+        })
+    ], ignore_index=True)
 
-print("✅ Tabelle erfolgreich erstellt und als JPG gespeichert.")
+# === CSV speichern
+output_df.to_csv(OUTPUT_PATH, index=False, encoding='utf-8-sig')
+
+print("✅ Datei erfolgreich erstellt und als CSV gespeichert.")
