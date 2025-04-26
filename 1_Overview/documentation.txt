@@ -25,4 +25,20 @@ Aufbau der Präsentation
         - Zweite Analyse: Stadtteil Start und Stadtteil Ziel nach Beliebtheit (Also Top-down Ranking) herausbekommen. Hierzu 
         wieder eine gemeinsame Excel und CSV-Datei erstellen. Was hat uns irriteriet: Die Anzahl der Starts und die Anzahl der
         Ziele in einem Stadtteil waren immer gleich. Kann das sein? Es ist tatsächlich so, da das Wegetagebuch mit KI erstellt wurde!
+                Kommentar hierzu von ChatGPT:
+                Wenn eine KI wie ChatGPT Daten synthetisch erstellt (also "erfindet"), passiert oft Folgendes:
+
+    	        Die KI versucht realistisch wirkende Daten zu erzeugen, aber sie hat keine echte Erfahrung oder statistische Verteilung der echten Welt.
+
+                Ohne spezielles Prompting (z.B. "Erzeuge viele Fahrten aus Wohngebieten und Ziele in Einkaufszentren") wird die KI oft versuchen, die Daten ausgeglichen und symmetrisch zu machen, weil das "ordnungsmäßig" aussieht.
+
+                Konkret heißt das: Die KI erzeugt z.B. "gleich viele" Starts und Ziele pro Stadtteil, damit die Daten "balanciert" wirken.
+
+                Kurz gesagt:
+                → Wenn dein Wegetagebuch mit ChatGPT oder anderer KI erstellt wurde und es keinen echten Stadtteil-Fokus gab,
+                → dann ist es ziemlich normal, dass Starts und Ziele fast 1:1 gleichverteilt sind.
+
+                In echten realen Daten (z.B. Pendlerströme) wäre das sehr unwahrscheinlich.
+
+
         
