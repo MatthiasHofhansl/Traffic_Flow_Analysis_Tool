@@ -55,7 +55,7 @@ Aufbau der Präsentation
         Tag: Jede Person hat eigene IDs und jetzt möchten wir natürlich analysieren wie viele
         Kilometer die Personen durchschnittlich pro Tag zurückgelegt haben
 
-        - 7. Wo wohnen die meisten Menschen?
+        - 7. Wo wohnen die meisten Menschen? Erledigt!
 
         - 8. Aufteilung Haushaltstypen?
 
