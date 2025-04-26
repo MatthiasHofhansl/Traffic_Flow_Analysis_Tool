@@ -9,6 +9,7 @@ from openpyxl.utils import get_column_letter
 CSV_PATH = os.path.join("3_Data for analysis", "wegetagebuch_karlsruhe_koordinaten.csv")
 OUTPUT_FOLDER = "7_Part 4 Graphics and tables"
 
+# Hauptspeicherpfade
 OUTPUT_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.csv")
 OUTPUT_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.xlsx")
 RANKING_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Stadtteile_Ranking.csv")
@@ -21,6 +22,9 @@ MULTIMODAL_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Multimodalität.xlsx")
 MODAL_SPLIT_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Wege.csv")
 MODAL_SPLIT_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Wege.xlsx")
 MODAL_SPLIT_PIE_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Wege.png")
+MODAL_SPLIT_KM_CSV_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Personenkilometer.csv")
+MODAL_SPLIT_KM_XLSX_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Personenkilometer.xlsx")
+MODAL_SPLIT_KM_PIE_PATH = os.path.join(OUTPUT_FOLDER, "Modal Split_Personenkilometer.png")
 
 # === Hilfsfunktion zur Excel-Formatierung
 def format_excel(filepath):
@@ -149,7 +153,7 @@ multimodal_df.to_csv(MULTIMODAL_CSV_PATH, index=False, encoding='utf-8-sig')
 multimodal_df.to_excel(MULTIMODAL_XLSX_PATH, index=False)
 format_excel(MULTIMODAL_XLSX_PATH)
 
-# === 6. Modal Split Analyse
+# === 6. Modal Split Wege (Anteile nach Wegen)
 modal_split_valid = df.dropna(subset=["Verkehrsmittel"])
 modal_split = (
     modal_split_valid["Verkehrsmittel"].value_counts(normalize=True) * 100
@@ -162,10 +166,10 @@ modal_split.to_csv(MODAL_SPLIT_CSV_PATH, index=False, encoding='utf-8-sig')
 modal_split.to_excel(MODAL_SPLIT_XLSX_PATH, index=False)
 format_excel(MODAL_SPLIT_XLSX_PATH)
 
-# === 7. Kreisdiagramm Modal Split
+# Farben Modal Split korrekt angepasst auf "zu Fuß"
 farben_dict_modal_split = {
     "Auto": "red",
-    "Zu Fuß": "deepskyblue",
+    "zu Fuß": "deepskyblue",
     "Fahrrad": "navy",
     "ÖPNV": "green",
     "Multimodal": "orange",
@@ -187,4 +191,30 @@ plt.title("Modal Split der Wege")
 plt.savefig(MODAL_SPLIT_PIE_PATH, bbox_inches='tight')
 plt.close()
 
-print("✅ Alle Analysen, Tabellen und Diagramme wurden erfolgreich erstellt und gespeichert.")
+# === 7. Modal Split Personenkilometer
+modal_split_km = df.dropna(subset=["Verkehrsmittel", "Entfernung_km"])
+modal_split_km_grouped = modal_split_km.groupby("Verkehrsmittel")["Entfernung_km"].sum()
+modal_split_km_percent = (modal_split_km_grouped / modal_split_km_grouped.sum() * 100).reset_index()
+modal_split_km_percent.columns = ["Verkehrsmittel", "Prozentuale Verteilung"]
+modal_split_km_percent["Prozentuale Verteilung"] = modal_split_km_percent["Prozentuale Verteilung"].round(2)
+
+modal_split_km_percent.to_csv(MODAL_SPLIT_KM_CSV_PATH, index=False, encoding='utf-8-sig')
+modal_split_km_percent.to_excel(MODAL_SPLIT_KM_XLSX_PATH, index=False)
+format_excel(MODAL_SPLIT_KM_XLSX_PATH)
+
+farben_modal_km = [farben_dict_modal_split.get(vm, "lightgrey") for vm in modal_split_km_percent["Verkehrsmittel"]]
+
+fig, ax = plt.subplots(figsize=(10, 8))
+ax.pie(
+    modal_split_km_percent["Prozentuale Verteilung"],
+    labels=modal_split_km_percent["Verkehrsmittel"],
+    autopct="%1.1f%%",
+    startangle=140,
+    colors=farben_modal_km
+)
+ax.axis('equal')
+plt.title("Modal Split der Personenkilometer")
+plt.savefig(MODAL_SPLIT_KM_PIE_PATH, bbox_inches='tight')
+plt.close()
+
+print("✅ Alle Dateien und Diagramme wurden erfolgreich erstellt und gespeichert.")
