@@ -44,6 +44,8 @@ ALTER_CSV_PATH = os.path.join(CSV_FOLDER, "Durchschnittsalter.csv")
 ALTER_XLSX_PATH = os.path.join(XLSX_FOLDER, "Durchschnittsalter.xlsx")
 WEGE_ANZAHL_CSV_PATH = os.path.join(CSV_FOLDER, "Anzahl aufgezeichneter Wege.csv")
 WEGE_ANZAHL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Anzahl aufgezeichneter Wege.xlsx")
+PERSONEN_ANZAHL_CSV_PATH = os.path.join(CSV_FOLDER, "Anzahl befragter Personen.csv")
+PERSONEN_ANZAHL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Anzahl befragter Personen.xlsx")
 
 # === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
@@ -298,5 +300,14 @@ anzahl_wege_df = pd.DataFrame({"Anzahl aufgezeichneter Wege": [anzahl_wege]})
 anzahl_wege_df.to_csv(WEGE_ANZAHL_CSV_PATH, index=False, encoding='utf-8-sig')
 anzahl_wege_df.to_excel(WEGE_ANZAHL_XLSX_PATH, index=False)
 format_excel(WEGE_ANZAHL_XLSX_PATH)
+
+# === 14. Anzahl befragter Personen
+df_personen = df.dropna(subset=["PersonenID"])
+anzahl_personen = df_personen["PersonenID"].nunique()
+anzahl_personen_df = pd.DataFrame({"Anzahl befragter Personen": [anzahl_personen]})
+
+anzahl_personen_df.to_csv(PERSONEN_ANZAHL_CSV_PATH, index=False, encoding='utf-8-sig')
+anzahl_personen_df.to_excel(PERSONEN_ANZAHL_XLSX_PATH, index=False)
+format_excel(PERSONEN_ANZAHL_XLSX_PATH)
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
