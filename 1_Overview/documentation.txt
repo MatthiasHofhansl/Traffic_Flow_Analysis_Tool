@@ -44,6 +44,8 @@ Aufbau der Präsentation
         aller Wege waren Freizeitwege. Hier wurde dann nachträglich noch ein Pie Chart hinzugefügt. Das hat ganz gut geklappt. Was
         allerdings wieder ein bisschen Schade ist, dass die Daten so seelenlos sind.
 
+        Hier kam der Gedanke die Eingangsdaten nochmal durch KI anpassen zu lassen und mit einer persönlicheren Note zu versehen.
+
         - 4. Wie viele Prozent der Wege waren multimodal?
 
         - 5. Aufteilung der Verkehrsmittel
