@@ -65,7 +65,7 @@ Aufbau der Präsentation
 
         - 11. Durchschnittsalter der Menschen? Erledigt!
 
-        - 12. Anzahl aufgezeichneter Wege
+        - 12. Anzahl aufgezeichneter Wege. Erledigt!
 
         - 13. Heatmaps von 4.1 und 4.2
 
