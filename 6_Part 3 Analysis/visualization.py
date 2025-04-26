@@ -42,6 +42,8 @@ GESCHLECHTER_CSV_PATH = os.path.join(CSV_FOLDER, "Geschlechter.csv")
 GESCHLECHTER_XLSX_PATH = os.path.join(XLSX_FOLDER, "Geschlechter.xlsx")
 ALTER_CSV_PATH = os.path.join(CSV_FOLDER, "Durchschnittsalter.csv")
 ALTER_XLSX_PATH = os.path.join(XLSX_FOLDER, "Durchschnittsalter.xlsx")
+WEGE_ANZAHL_CSV_PATH = os.path.join(CSV_FOLDER, "Anzahl aufgezeichneter Wege.csv")
+WEGE_ANZAHL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Anzahl aufgezeichneter Wege.xlsx")
 
 # === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
@@ -287,5 +289,14 @@ alter_df = pd.DataFrame({"Durchschnittsalter": [durchschnittsalter]})
 alter_df.to_csv(ALTER_CSV_PATH, index=False, encoding='utf-8-sig')
 alter_df.to_excel(ALTER_XLSX_PATH, index=False)
 format_excel(ALTER_XLSX_PATH)
+
+# === 13. Anzahl aufgezeichneter Wege
+df_wege = df.dropna(subset=["PersonenID"])
+anzahl_wege = df_wege.shape[0]
+anzahl_wege_df = pd.DataFrame({"Anzahl aufgezeichneter Wege": [anzahl_wege]})
+
+anzahl_wege_df.to_csv(WEGE_ANZAHL_CSV_PATH, index=False, encoding='utf-8-sig')
+anzahl_wege_df.to_excel(WEGE_ANZAHL_XLSX_PATH, index=False)
+format_excel(WEGE_ANZAHL_XLSX_PATH)
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
