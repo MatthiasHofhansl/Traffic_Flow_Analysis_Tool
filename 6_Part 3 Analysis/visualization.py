@@ -251,8 +251,6 @@ haushalt_counts.to_csv(HAUSHALTSTYPEN_CSV_PATH, index=False, encoding='utf-8-sig
 haushalt_counts.to_excel(HAUSHALTSTYPEN_XLSX_PATH, index=False)
 format_excel(HAUSHALTSTYPEN_XLSX_PATH)
 
-print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
-
 # === 10. Berufe Auswertung
 df_beruf = df.dropna(subset=["PersonenID", "Beruf"])
 beruf_unique = df_beruf.drop_duplicates(subset=["PersonenID"])
