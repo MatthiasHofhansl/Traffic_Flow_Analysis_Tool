@@ -11,9 +11,10 @@ CSV_FOLDER = os.path.join(BASE_FOLDER, "csv-files")
 XLSX_FOLDER = os.path.join(BASE_FOLDER, "xlsx-files")
 PNG_FOLDER = os.path.join(BASE_FOLDER, "png-files")
 
-# === Dateienpfade ===
+# === Eingabepfad
 CSV_PATH = os.path.join("3_Data for analysis", "wegetagebuch_karlsruhe_koordinaten.csv")
 
+# === Alle Ausgabepfade
 OUTPUT_CSV_PATH = os.path.join(CSV_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.csv")
 OUTPUT_XLSX_PATH = os.path.join(XLSX_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.xlsx")
 RANKING_CSV_PATH = os.path.join(CSV_FOLDER, "Stadtteile_Ranking.csv")
@@ -29,6 +30,8 @@ MODAL_SPLIT_PIE_PATH = os.path.join(PNG_FOLDER, "Modal Split_Wege.png")
 MODAL_SPLIT_KM_CSV_PATH = os.path.join(CSV_FOLDER, "Modal Split_Personenkilometer.csv")
 MODAL_SPLIT_KM_XLSX_PATH = os.path.join(XLSX_FOLDER, "Modal Split_Personenkilometer.xlsx")
 MODAL_SPLIT_KM_PIE_PATH = os.path.join(PNG_FOLDER, "Modal Split_Personenkilometer.png")
+WEGE_DISTANZEN_CSV_PATH = os.path.join(CSV_FOLDER, "Wege und Distanzen.csv")
+WEGE_DISTANZEN_XLSX_PATH = os.path.join(XLSX_FOLDER, "Wege und Distanzen.xlsx")
 
 # === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
@@ -48,6 +51,10 @@ def format_excel(filepath):
 # === Daten einlesen
 df = pd.read_csv(CSV_PATH)
 
+# === Vorbereitungen: Startzeit und Datum
+df["Startzeit"] = pd.to_datetime(df["Startzeit"], errors='coerce')
+df["Datum"] = df["Startzeit"].dt.date
+
 # === 1. Stadtteilbeziehungen
 df_valid = df.dropna(subset=["Stadtteil Start", "Stadtteil Ziel"])
 weg_counts = (
@@ -60,19 +67,13 @@ weg_counts = (
 mask_häufig = weg_counts["Anzahl Wege"] >= 20
 weg_counts_häufig = weg_counts[mask_häufig]
 weg_counts_selten = weg_counts[~mask_häufig]
-
 restliche_wege_anzahl = weg_counts_selten["Anzahl Wege"].sum()
 
 output_df = weg_counts_häufig.copy()
-
 if restliche_wege_anzahl > 0:
     output_df = pd.concat([
         output_df,
-        pd.DataFrame({
-            "Stadtteil Start": ["Restliche Wege"],
-            "Stadtteil Ziel": [""],
-            "Anzahl Wege": [restliche_wege_anzahl]
-        })
+        pd.DataFrame({"Stadtteil Start": ["Restliche Wege"], "Stadtteil Ziel": [""], "Anzahl Wege": [restliche_wege_anzahl]})
     ], ignore_index=True)
 
 output_df.to_csv(OUTPUT_CSV_PATH, index=False, encoding='utf-8-sig')
@@ -82,7 +83,6 @@ format_excel(OUTPUT_XLSX_PATH)
 # === 2. Stadtteile-Ranking
 start_ranking = df_valid["Stadtteil Start"].value_counts().reset_index()
 start_ranking.columns = ["Start Stadtteil", "Anzahl Starts"]
-
 ziel_ranking = df_valid["Stadtteil Ziel"].value_counts().reset_index()
 ziel_ranking.columns = ["Ziel Stadtteil", "Anzahl Ziele"]
 
@@ -113,35 +113,21 @@ zweck_counts.to_csv(ZWECK_CSV_PATH, index=False, encoding='utf-8-sig')
 zweck_counts.to_excel(ZWECK_XLSX_PATH, index=False)
 format_excel(ZWECK_XLSX_PATH)
 
-# === 4. Kreisdiagramm Wegezwecke
 farben_dict_zwecke = {
-    "Heimweg": "orchid",
-    "Sport": "limegreen",
-    "Schule/Uni": "navy",
-    "Freizeit": "gold",
-    "Arbeit": "deepskyblue",
-    "Arztbesuch": "grey",
-    "Begleitung": "lightgreen",
-    "Erholung": "sandybrown",
-    "Einkaufen": "darkred"
+    "Heimweg": "orchid", "Sport": "limegreen", "Schule/Uni": "navy",
+    "Freizeit": "gold", "Arbeit": "deepskyblue", "Arztbesuch": "grey",
+    "Begleitung": "lightgreen", "Erholung": "sandybrown", "Einkaufen": "darkred"
 }
-
 farben = [farben_dict_zwecke.get(zweck, "lightgrey") for zweck in zweck_counts["Zweck"]]
 
 fig, ax = plt.subplots(figsize=(10, 8))
-ax.pie(
-    zweck_counts["Prozentuale Verteilung"],
-    labels=zweck_counts["Zweck"],
-    autopct="%1.1f%%",
-    startangle=140,
-    colors=farben
-)
+ax.pie(zweck_counts["Prozentuale Verteilung"], labels=zweck_counts["Zweck"], autopct="%1.1f%%", startangle=140, colors=farben)
 ax.axis('equal')
 plt.title("Prozentuale Verteilung der Wegezwecke")
 plt.savefig(ZWECK_PIE_PATH, bbox_inches='tight')
 plt.close()
 
-# === 5. Multimodalität Analyse
+# === 4. Multimodalität Analyse
 multimodal_valid = df.dropna(subset=["Multimodal"])
 multimodal_ja = (multimodal_valid["Multimodal"].str.lower() == "ja").sum()
 gesamt = multimodal_valid.shape[0]
@@ -157,12 +143,11 @@ multimodal_df.to_csv(MULTIMODAL_CSV_PATH, index=False, encoding='utf-8-sig')
 multimodal_df.to_excel(MULTIMODAL_XLSX_PATH, index=False)
 format_excel(MULTIMODAL_XLSX_PATH)
 
-# === 6. Modal Split Wege
+# === 5. Modal Split Wege
 modal_split_valid = df.dropna(subset=["Verkehrsmittel"])
 modal_split = (
     modal_split_valid["Verkehrsmittel"].value_counts(normalize=True) * 100
 ).reset_index()
-
 modal_split.columns = ["Verkehrsmittel", "Prozentuale Verteilung"]
 modal_split["Prozentuale Verteilung"] = modal_split["Prozentuale Verteilung"].round(2)
 
@@ -170,31 +155,20 @@ modal_split.to_csv(MODAL_SPLIT_CSV_PATH, index=False, encoding='utf-8-sig')
 modal_split.to_excel(MODAL_SPLIT_XLSX_PATH, index=False)
 format_excel(MODAL_SPLIT_XLSX_PATH)
 
-farben_dict_modal_split = {
-    "Auto": "red",
-    "zu Fuß": "deepskyblue",
-    "Fahrrad": "navy",
-    "ÖPNV": "green",
-    "Multimodal": "orange",
-    "E-Scooter": "purple"
+farben_dict_modal = {
+    "Auto": "red", "zu Fuß": "deepskyblue", "Fahrrad": "navy",
+    "ÖPNV": "green", "Multimodal": "orange", "E-Scooter": "purple"
 }
-
-farben_modal = [farben_dict_modal_split.get(vm, "lightgrey") for vm in modal_split["Verkehrsmittel"]]
+farben_modal = [farben_dict_modal.get(vm, "lightgrey") for vm in modal_split["Verkehrsmittel"]]
 
 fig, ax = plt.subplots(figsize=(10, 8))
-ax.pie(
-    modal_split["Prozentuale Verteilung"],
-    labels=modal_split["Verkehrsmittel"],
-    autopct="%1.1f%%",
-    startangle=140,
-    colors=farben_modal
-)
+ax.pie(modal_split["Prozentuale Verteilung"], labels=modal_split["Verkehrsmittel"], autopct="%1.1f%%", startangle=140, colors=farben_modal)
 ax.axis('equal')
 plt.title("Modal Split der Wege")
 plt.savefig(MODAL_SPLIT_PIE_PATH, bbox_inches='tight')
 plt.close()
 
-# === 7. Modal Split Personenkilometer
+# === 6. Modal Split Personenkilometer
 modal_split_km = df.dropna(subset=["Verkehrsmittel", "Entfernung_km"])
 modal_split_km_grouped = modal_split_km.groupby("Verkehrsmittel")["Entfernung_km"].sum()
 modal_split_km_percent = (modal_split_km_grouped / modal_split_km_grouped.sum() * 100).reset_index()
@@ -205,19 +179,43 @@ modal_split_km_percent.to_csv(MODAL_SPLIT_KM_CSV_PATH, index=False, encoding='ut
 modal_split_km_percent.to_excel(MODAL_SPLIT_KM_XLSX_PATH, index=False)
 format_excel(MODAL_SPLIT_KM_XLSX_PATH)
 
-farben_modal_km = [farben_dict_modal_split.get(vm, "lightgrey") for vm in modal_split_km_percent["Verkehrsmittel"]]
+farben_modal_km = [farben_dict_modal.get(vm, "lightgrey") for vm in modal_split_km_percent["Verkehrsmittel"]]
 
 fig, ax = plt.subplots(figsize=(10, 8))
-ax.pie(
-    modal_split_km_percent["Prozentuale Verteilung"],
-    labels=modal_split_km_percent["Verkehrsmittel"],
-    autopct="%1.1f%%",
-    startangle=140,
-    colors=farben_modal_km
-)
+ax.pie(modal_split_km_percent["Prozentuale Verteilung"], labels=modal_split_km_percent["Verkehrsmittel"], autopct="%1.1f%%", startangle=140, colors=farben_modal_km)
 ax.axis('equal')
 plt.title("Modal Split der Personenkilometer")
 plt.savefig(MODAL_SPLIT_KM_PIE_PATH, bbox_inches='tight')
 plt.close()
 
-print("✅ Alle Dateien und Diagramme wurden erfolgreich in die richtigen Unterordner gespeichert.")
+# === 7. Wege und Distanzen
+df_filtered = df[["PersonenID", "Datum", "Entfernung_km"]].dropna()
+gruppen = df_filtered.groupby(["PersonenID", "Datum"])
+anzahl_wege_pro_tag = gruppen.size()
+tagesdistanzen = gruppen["Entfernung_km"].sum()
+durchschnittliche_wegelänge = gruppen["Entfernung_km"].mean()
+
+ergebnis_df = pd.DataFrame({
+    "Anzahl Wege pro Tag": anzahl_wege_pro_tag,
+    "Tagesdistanz (km)": tagesdistanzen,
+    "Durchschnittliche Wegelänge (km)": durchschnittliche_wegelänge
+}).reset_index()
+
+gesamt_ergebnis = pd.DataFrame({
+    "Kennzahl": [
+        "Durchschnittliche Wegelänge pro Tag (km)",
+        "Durchschnittliche Tagesdistanz (km)",
+        "Durchschnittliche Anzahl Wege pro Tag"
+    ],
+    "Wert": [
+        round(ergebnis_df["Durchschnittliche Wegelänge (km)"].mean(), 2),
+        round(ergebnis_df["Tagesdistanz (km)"].mean(), 2),
+        round(ergebnis_df["Anzahl Wege pro Tag"].mean(), 2)
+    ]
+})
+
+gesamt_ergebnis.to_csv(WEGE_DISTANZEN_CSV_PATH, index=False, encoding='utf-8-sig')
+gesamt_ergebnis.to_excel(WEGE_DISTANZEN_XLSX_PATH, index=False)
+format_excel(WEGE_DISTANZEN_XLSX_PATH)
+
+print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
