@@ -41,7 +41,8 @@ Aufbau der Präsentation
                 In echten realen Daten (z.B. Pendlerströme) wäre das sehr unwahrscheinlich.
 
         - 3. Aufteilung der Wegezwecke: Das bedeutet Verkehrsaufkommen (Wege)/Wegegründe sollen hier dargestellt werden! Bsp.: 20%
-        aller Wege waren Freizeitwege
+        aller Wege waren Freizeitwege. Hier wurde dann nachträglich noch ein Pie Chart hinzugefügt. Das hat ganz gut geklappt. Was
+        allerdings wieder ein bisschen Schade ist, dass die Daten so seelenlos sind.
 
         - 4. Wie viele Prozent der Wege waren multimodal?
 
