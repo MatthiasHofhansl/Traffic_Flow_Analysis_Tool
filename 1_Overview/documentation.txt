@@ -71,7 +71,8 @@ Aufbau der Präsentation
 
         - 14. Anzahl von befragten Personen? Erldigt!
 
-        - 15. In welchem Zeitraum wurden die Wege erfasst?
+        - 15. In welchem Zeitraum wurden die Wege erfasst? Entfällt hier/Beliebig wählbar, weil die Daten an einem beliebigen 
+        Datum erfasst wurden! Bei mehreren Daten würde man ja die Uhrzeiten nicht ohne Datum erfassen!
 
 
         
