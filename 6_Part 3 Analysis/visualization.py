@@ -32,6 +32,8 @@ MODAL_SPLIT_KM_XLSX_PATH = os.path.join(XLSX_FOLDER, "Modal Split_Personenkilome
 MODAL_SPLIT_KM_PIE_PATH = os.path.join(PNG_FOLDER, "Modal Split_Personenkilometer.png")
 WEGE_DISTANZEN_CSV_PATH = os.path.join(CSV_FOLDER, "Wege und Distanzen.csv")
 WEGE_DISTANZEN_XLSX_PATH = os.path.join(XLSX_FOLDER, "Wege und Distanzen.xlsx")
+WOHNVIERTEL_CSV_PATH = os.path.join(CSV_FOLDER, "Wohnviertel.csv")
+WOHNVIERTEL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Wohnviertel.xlsx")
 
 # === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
@@ -217,5 +219,21 @@ gesamt_ergebnis = pd.DataFrame({
 gesamt_ergebnis.to_csv(WEGE_DISTANZEN_CSV_PATH, index=False, encoding='utf-8-sig')
 gesamt_ergebnis.to_excel(WEGE_DISTANZEN_XLSX_PATH, index=False)
 format_excel(WEGE_DISTANZEN_XLSX_PATH)
+
+# === 8. Wohnviertel Auswertung (NEU)
+df_wohnviertel = df.dropna(subset=["PersonenID", "Wohnviertel"])
+wohnviertel_unique = df_wohnviertel.drop_duplicates(subset=["PersonenID"])
+wohnviertel_counts = wohnviertel_unique["Wohnviertel"].value_counts().reset_index()
+wohnviertel_counts.columns = ["Wohnviertel", "Anzahl Personen"]
+
+gesamt = wohnviertel_counts["Anzahl Personen"].sum()
+wohnviertel_counts = pd.concat([
+    wohnviertel_counts,
+    pd.DataFrame({"Wohnviertel": ["Alle Wohnviertel"], "Anzahl Personen": [gesamt]})
+], ignore_index=True)
+
+wohnviertel_counts.to_csv(WOHNVIERTEL_CSV_PATH, index=False, encoding='utf-8-sig')
+wohnviertel_counts.to_excel(WOHNVIERTEL_XLSX_PATH, index=False)
+format_excel(WOHNVIERTEL_XLSX_PATH)
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
