@@ -67,12 +67,18 @@ Aufbau der Präsentation
 
         - 12. Anzahl aufgezeichneter Wege. Erledigt!
 
-        - 13. Heatmaps von 4.1 und 4.2
+        - 13. Heatmaps von 4.1 und 4.2 ---(TO DO)---
 
         - 14. Anzahl von befragten Personen? Erldigt!
 
         - 15. In welchem Zeitraum wurden die Wege erfasst? Entfällt hier/Beliebig wählbar, weil die Daten an einem beliebigen 
         Datum erfasst wurden! Bei mehreren Daten würde man ja die Uhrzeiten nicht ohne Datum erfassen!
+
+        - 16. In welcher Stunde wurden am meisten Wege gegangen? ---(TO DO)---
+
+        - 17. Heatmaps für Arbeits- und Freizeitziele ---(TO DO)---
+
+        Tabelle realistischer machen! ---(TO DO)---
 
 
         
