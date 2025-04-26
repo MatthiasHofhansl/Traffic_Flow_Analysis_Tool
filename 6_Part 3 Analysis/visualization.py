@@ -6,12 +6,12 @@ from openpyxl.utils import get_column_letter
 
 # === Pfade ===
 CSV_PATH = os.path.join("3_Data for analysis", "wegetagebuch_karlsruhe_koordinaten.csv")
-OUTPUT_CSV_PATH = os.path.join("7_Part 4 Graphics", "Stadtteilbeziehungen_Wegeanzahl.csv")
-OUTPUT_XLSX_PATH = os.path.join("7_Part 4 Graphics", "Stadtteilbeziehungen_Wegeanzahl.xlsx")
-RANKING_CSV_PATH = os.path.join("7_Part 4 Graphics", "Stadtteile_Ranking.csv")
-RANKING_XLSX_PATH = os.path.join("7_Part 4 Graphics", "Stadtteile_Ranking.xlsx")
-ZWECK_CSV_PATH = os.path.join("7_Part 4 Graphics", "Verkehrsaufkommen (Wege)_Wegegründe.csv")
-ZWECK_XLSX_PATH = os.path.join("7_Part 4 Graphics", "Verkehrsaufkommen (Wege)_Wegegründe.xlsx")
+OUTPUT_CSV_PATH = os.path.join("7_Part 4 Graphics and tables", "Stadtteilbeziehungen_Wegeanzahl.csv")
+OUTPUT_XLSX_PATH = os.path.join("7_Part 4 Graphics and tables", "Stadtteilbeziehungen_Wegeanzahl.xlsx")
+RANKING_CSV_PATH = os.path.join("7_Part 4 Graphics and tables", "Stadtteile_Ranking.csv")
+RANKING_XLSX_PATH = os.path.join("7_Part 4 Graphics and tables", "Stadtteile_Ranking.xlsx")
+ZWECK_CSV_PATH = os.path.join("7_Part 4 Graphics and tables", "Verkehrsaufkommen (Wege)_Wegegründe.csv")
+ZWECK_XLSX_PATH = os.path.join("7_Part 4 Graphics and tables", "Verkehrsaufkommen (Wege)_Wegegründe.xlsx")
 
 # === Daten einlesen
 df = pd.read_csv(CSV_PATH)
