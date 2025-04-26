@@ -23,5 +23,6 @@ Aufbau der Präsentation
         - Hieraus kann später eine schöne Heatmap erstellt werden
 
         - Zweite Analyse: Stadtteil Start und Stadtteil Ziel nach Beliebtheit (Also Top-down Ranking) herausbekommen. Hierzu 
-        wieder eine gemeinsame Excel und CSV-Datei erstellen
+        wieder eine gemeinsame Excel und CSV-Datei erstellen. Was hat uns irriteriet: Die Anzahl der Starts und die Anzahl der
+        Ziele in einem Stadtteil waren immer gleich. Kann das sein?
         
