@@ -1,0 +1,48 @@
+Traffic Flow Analysis Tool 🚦
+Analyze travel behavior in Karlsruhe using geospatial and statistical methods.
+
+📁 Project Structure
+1_Overview: Project brainstorming, methodology, and tasks
+
+2_Shapefile folder: Shapefiles of Karlsruhe's city districts
+
+3_Data for analysis: Raw travel diary data with coordinates
+
+4_Part 1 Data preparation: Geocoding scripts for raw data
+
+5_Part 2 Get city districts: Assigns coordinates to city districts
+
+6_Part 3 Analysis: Data analysis scripts
+
+7_Part 4 Graphics and tables: Output tables and visualizations
+
+8_Manipulated wegetagebuch: Cleaned and processed travel diary
+
+🛠️ Features
+Assign coordinates to city districts using shapefiles
+
+Analyze trip purposes, modal split, multimodality, and trip distances
+
+Visualize:
+
+Heatmaps of district-to-district travel
+
+Popular work and leisure destinations
+
+Pie charts for mode shares and trip purposes
+
+📊 Tools & Libraries
+Python (pandas, geopandas, matplotlib, openpyxl, adjustText)
+
+Shapefiles for geospatial mapping
+
+CSV and XLSX outputs for easy reporting
+
+🚀 How to Use
+Prepare input data in 3_Data for analysis.
+
+Run geocoding and city district assignment scripts (4_Part 1, 5_Part 2).
+
+Execute analysis scripts (6_Part 3 Analysis).
+
+Find results in 7_Part 4 Graphics and tables.
