@@ -67,7 +67,7 @@ Aufbau der Präsentation
 
         - 12. Anzahl aufgezeichneter Wege. Erledigt!
 
-        - 13. Heatmaps von 4.1 und 4.2 ---(TO DO)---
+        - 13. Heatmaps von 4.1 und 4.2 Erledigt!
 
         - 14. Anzahl von befragten Personen? Erldigt!
 
