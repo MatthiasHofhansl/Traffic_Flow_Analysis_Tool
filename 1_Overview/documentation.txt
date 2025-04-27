@@ -74,7 +74,7 @@ Aufbau der Präsentation
         - 15. In welchem Zeitraum wurden die Wege erfasst? Entfällt hier/Beliebig wählbar, weil die Daten an einem beliebigen 
         Datum erfasst wurden! Bei mehreren Daten würde man ja die Uhrzeiten nicht ohne Datum erfassen!
 
-        - 16. In welcher Stunde wurden am meisten Wege gegangen? ---(TO DO)---
+        - 16. In welcher Stunde wurden am meisten Wege gegangen? Erledigt!
 
         - 17. Heatmaps für Arbeits- und Freizeitziele ---(TO DO)---
 
