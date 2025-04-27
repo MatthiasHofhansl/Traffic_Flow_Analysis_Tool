@@ -14,7 +14,7 @@ PNG_FOLDER = os.path.join(BASE_FOLDER, "png-files")
 
 # === Pfade für Heatmaps ===
 SHAPEFILE_PATH = os.path.join("2_Shapefile folder", "Stadtteile_Karlsruhe.shp")
-HEATMAP_PNG_PATH = os.path.join(PNG_FOLDER, "Stadtteilbeziehungen_Heatmap.png")
+HEATMAP_STADTBEZIEHUNGEN_PATH = os.path.join(PNG_FOLDER, "Stadtteilbeziehungen_Heatmap.png")
 HEATMAP_ARBEITSZIELE_PATH = os.path.join(PNG_FOLDER, "Heatmap_Arbeitsziele.png")
 
 # === Eingabepfad ===
@@ -85,7 +85,6 @@ weg_counts = (
     .reset_index(name="Anzahl Wege")
     .sort_values(by="Anzahl Wege", ascending=False)
 )
-
 mask_häufig = weg_counts["Anzahl Wege"] >= 20
 weg_counts_häufig = weg_counts[mask_häufig]
 weg_counts_selten = weg_counts[~mask_häufig]
@@ -97,68 +96,83 @@ if restliche_wege_anzahl > 0:
         output_df,
         pd.DataFrame({"Stadtteil Start": ["Restliche Wege"], "Stadtteil Ziel": [""], "Anzahl Wege": [restliche_wege_anzahl]})
     ], ignore_index=True)
-
 output_df.to_csv(OUTPUT_CSV_PATH, index=False, encoding='utf-8-sig')
 output_df.to_excel(OUTPUT_XLSX_PATH, index=False)
 format_excel(OUTPUT_XLSX_PATH)
 
-# === 1.1 Heatmap der Stadtteilbeziehungen ===
-# Load shapefile
+# === Shapefile laden und Grunddaten für Heatmaps ===
 try:
     gdf = gpd.read_file(SHAPEFILE_PATH)
 except Exception as e:
     print(f"Fehler beim Laden der Shapedatei: {e}")
-else:
-    # District name column detection
+    gdf = None
+
+if gdf is not None:
+    # District name detection
     string_cols = gdf.select_dtypes(include=['object']).columns.tolist()
     possible = [col for col in string_cols if 'name' in col.lower() or 'stadtteil' in col.lower()]
     name_col = possible[0] if possible else string_cols[0]
     gdf['district_name'] = gdf[name_col]
-
-    # Compute centroids
+    # Centroids
     gdf['centroid'] = gdf.geometry.centroid
+    centroid_dict = dict(zip(gdf['district_name'], gdf['centroid']))
 
-    # Load relationship data
-    rel_df = pd.read_csv(OUTPUT_CSV_PATH)
-    rel_df = rel_df.dropna(subset=['Stadtteil Start', 'Stadtteil Ziel'])
+    # === 1.1 Heatmap der Stadtteilbeziehungen ===
+    rel_df = output_df.dropna(subset=['Stadtteil Start', 'Stadtteil Ziel'])
     rel_df = rel_df[(rel_df['Stadtteil Start'] != 'Restliche Wege') & (rel_df['Stadtteil Ziel'] != '')]
-
     if rel_df.empty:
         print('Keine Stadtteilbeziehungen zum Anzeigen.')
     else:
-        # Compute flow sum per district for shading
         flow_start = rel_df.groupby('Stadtteil Start')['Anzahl Wege'].sum()
         flow_target = rel_df.groupby('Stadtteil Ziel')['Anzahl Wege'].sum()
         flow_total = flow_start.add(flow_target, fill_value=0)
         gdf['flow_sum'] = gdf['district_name'].map(flow_total).fillna(0)
-
         max_count = rel_df['Anzahl Wege'].max()
         fig, ax = plt.subplots(figsize=(12, 12))
-        # Plot choropleth shading
+        # Choropleth
         gdf.plot(ax=ax, column='flow_sum', cmap='Reds', edgecolor='black', linewidth=0.5)
-
-        # Plot arrows with increased width
-        centroid_dict = dict(zip(gdf['district_name'], gdf['centroid']))
+        # Pfeile
         for _, row in rel_df.iterrows():
             start = row['Stadtteil Start']
             target = row['Stadtteil Ziel']
             count = row['Anzahl Wege']
             if start in centroid_dict and target in centroid_dict:
-                x_start, y_start = centroid_dict[start].x, centroid_dict[start].y
-                x_end, y_end = centroid_dict[target].x, centroid_dict[target].y
-                # Increased arrow width
+                x0, y0 = centroid_dict[start].x, centroid_dict[start].y
+                x1, y1 = centroid_dict[target].x, centroid_dict[target].y
                 width = 1 + (count / max_count) * 8
-                ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start),
-                            arrowprops=dict(arrowstyle='->', color='darkred', linewidth=width, alpha=0.7))
-        # Label districts
+                ax.annotate('', xy=(x1, y1), xytext=(x0, y0), arrowprops=dict(arrowstyle='->', color='darkred', linewidth=width, alpha=0.7))
+        # Beschriftung
         for _, row in gdf.iterrows():
             x, y = row['centroid'].x, row['centroid'].y
-            name = row['district_name']
-            ax.text(x, y, name, horizontalalignment='center', fontsize=8)
-
+            ax.text(x, y, row['district_name'], ha='center', fontsize=8)
         ax.set_title('Heatmap der Stadtteilbeziehungen in Karlsruhe')
         ax.axis('off')
-        plt.savefig(HEATMAP_PNG_PATH, bbox_inches='tight')
+        plt.savefig(HEATMAP_STADTBEZIEHUNGEN_PATH, bbox_inches='tight')
+        plt.close()
+        print(f'✅ Stadtteilbeziehungen-Heatmap erstellt: {HEATMAP_STADTBEZIEHUNGEN_PATH}')
+
+    # === 1.2 Heatmap beliebter Arbeitsziele ===
+    arbeit_df = df[df['Zweck'] == 'Arbeit'].dropna(subset=['Zielort', 'Stadtteil Ziel'])
+    zielort_counts = arbeit_df['Zielort'].value_counts()
+    popular_zielorte = zielort_counts[zielort_counts >= 3].index.tolist()
+    if not popular_zielorte:
+        print('Keine häufigen Arbeitsziele zum Anzeigen.')
+    else:
+        fig2, ax2 = plt.subplots(figsize=(12, 12))
+        # Kein Schraffieren der Stadtteile
+        gdf.plot(ax=ax2, facecolor='none', edgecolor='black', linewidth=0.5)
+        # Punkte und Beschriftung
+        for zielort in popular_zielorte:
+            # Ersten Datensatz zum Zielort auswählen
+            entry = arbeit_df[arbeit_df['Zielort'] == zielort].iloc[0]
+            district = entry['Stadtteil Ziel']
+            if district in centroid_dict:
+                x, y = centroid_dict[district].x, centroid_dict[district].y
+                ax2.scatter(x, y, color='red', s=80, zorder=5)
+                ax2.text(x, y, zielort, ha='center', va='bottom', fontsize=8, color='darkred')
+        ax2.set_title('Heatmap beliebter Arbeitsziele in Karlsruhe')
+        ax2.axis('off')
+        plt.savefig(HEATMAP_ARBEITSZIELE_PATH, bbox_inches='tight')
         plt.close()
 
 # === 2. Stadtteile-Ranking ===
@@ -391,25 +405,5 @@ spitzenstunde_df = pd.DataFrame({"Spitzenstunde": [zeitfenster]})
 spitzenstunde_df.to_csv(SPITZENSTUNDE_CSV_PATH, index=False, encoding='utf-8-sig')
 spitzenstunde_df.to_excel(SPITZENSTUNDE_XLSX_PATH, index=False)
 format_excel(SPITZENSTUNDE_XLSX_PATH)
-
-# === 16. Heatmap beliebter Arbeitsziele
-# Filter für Arbeitszweck
-arbeit_df = df[df['Zweck'] == 'Arbeit']
-arbeit_counts = arbeit_df['Stadtteil Ziel'].value_counts()
-popular_targets = arbeit_counts[arbeit_counts >= 3].index.tolist()
-if not popular_targets:
-    print('Keine häufigen Arbeitsziele zum Anzeigen.')
-else:
-    fig2, ax2 = plt.subplots(figsize=(12, 12))
-    gdf.plot(ax=ax2, column='flow_sum', cmap='Reds', edgecolor='black', linewidth=0.5)
-    for target in popular_targets:
-        if target in centroid_dict:
-            x, y = centroid_dict[target].x, centroid_dict[target].y
-            ax2.scatter(x, y, color='red', s=80, zorder=5)
-            ax2.text(x, y, target, horizontalalignment='center', verticalalignment='bottom', fontsize=8, color='darkred')
-    ax2.set_title('Heatmap beliebter Arbeitsziele in Karlsruhe')
-    ax2.axis('off')
-    plt.savefig(HEATMAP_ARBEITSZIELE_PATH, bbox_inches='tight')
-    plt.close()
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
