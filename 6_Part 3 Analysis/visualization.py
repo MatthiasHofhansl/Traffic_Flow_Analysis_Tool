@@ -80,32 +80,35 @@ df["Datum"] = df["Startzeit"].dt.date
 # === 1. Stadtteilbeziehungen ===
 df_valid = df.dropna(subset=["Stadtteil Start", "Stadtteil Ziel"])
 weg_counts = (
-    df_valid.groupby(["Stadtteil Start", "Stadtteil Ziel"]).size().reset_index(name="Anzahl Wege").sort_values(by="Anzahl Wege", ascending=False)
+    df_valid.groupby(["Stadtteil Start", "Stadtteil Ziel"])
+    .size()
+    .reset_index(name="Anzahl Wege")
+    .sort_values(by="Anzahl Wege", ascending=False)
 )
 mask_häufig = weg_counts["Anzahl Wege"] >= 20
 weg_counts_häufig = weg_counts[mask_häufig]
 weg_counts_selten = weg_counts[~mask_häufig]
 restliche_wege_anzahl = weg_counts_selten["Anzahl Wege"].sum()
+
 output_df = weg_counts_häufig.copy()
 if restliche_wege_anzahl > 0:
     output_df = pd.concat(
         [
             output_df,
-            pd.DataFrame(
-                {
-                    "Stadtteil Start": ["Restliche Wege"],
-                    "Stadtteil Ziel": [""],
-                    "Anzahl Wege": [restliche_wege_anzahl],
-                }
-            ),
+            pd.DataFrame({
+                "Stadtteil Start": ["Restliche Wege"],
+                "Stadtteil Ziel": [""],
+                "Anzahl Wege": [restliche_wege_anzahl],
+            }),
         ],
         ignore_index=True,
     )
+
 output_df.to_csv(OUTPUT_CSV_PATH, index=False, encoding="utf-8-sig")
 output_df.to_excel(OUTPUT_XLSX_PATH, index=False)
 format_excel(OUTPUT_XLSX_PATH)
 
-# === Shapefile laden ===
+# === 1.1 Heatmap der Stadtteilbeziehungen ===
 try:
     gdf = gpd.read_file(SHAPEFILE_PATH)
 except Exception as e:
@@ -113,7 +116,7 @@ except Exception as e:
     gdf = None
 
 if gdf is not None:
-    # Spalte mit Stadtteilnamen ermitteln
+    # Stadtteilnamen und Zentroiden bestimmen
     string_cols = gdf.select_dtypes(include=["object"]).columns.tolist()
     name_col_candidates = [c for c in string_cols if "name" in c.lower() or "stadtteil" in c.lower()]
     name_col = name_col_candidates[0] if name_col_candidates else string_cols[0]
@@ -121,76 +124,75 @@ if gdf is not None:
     gdf["centroid"] = gdf.geometry.centroid
     centroid_dict = dict(zip(gdf["district_name"], gdf["centroid"]))
 
-    # === 1.1 Heatmap der Stadtteilbeziehungen ===
+    # Stadtteilbeziehungen einlesen
     rel_df = output_df.query("`Stadtteil Start` != 'Restliche Wege' and `Stadtteil Ziel` != ''")
     if not rel_df.empty:
         flow_start = rel_df.groupby("Stadtteil Start")["Anzahl Wege"].sum()
         flow_target = rel_df.groupby("Stadtteil Ziel")["Anzahl Wege"].sum()
-        gdf["flow_sum"] = (
-            gdf["district_name"].map(flow_start.add(flow_target, fill_value=0)).fillna(0)
-        )
+        gdf["flow_sum"] = gdf["district_name"].map(flow_start.add(flow_target, fill_value=0)).fillna(0)
         max_count = rel_df["Anzahl Wege"].max()
+
         fig, ax = plt.subplots(figsize=(12, 12))
         gdf.plot(ax=ax, column="flow_sum", cmap="Reds", edgecolor="black", linewidth=0.5)
+
         for _, row in rel_df.iterrows():
-            s, t, c = row["Stadtteil Start"], row["Stadtteil Ziel"], row["Anzahl Wege"]
-            if s in centroid_dict and t in centroid_dict:
-                x0, y0 = centroid_dict[s].x, centroid_dict[s].y
-                x1, y1 = centroid_dict[t].x, centroid_dict[t].y
-                width = 1 + (c / max_count) * 8
+            start = row["Stadtteil Start"]
+            ziel = row["Stadtteil Ziel"]
+            count = row["Anzahl Wege"]
+            if start in centroid_dict and ziel in centroid_dict:
+                x0, y0 = centroid_dict[start].x, centroid_dict[start].y
+                x1, y1 = centroid_dict[ziel].x, centroid_dict[ziel].y
+                width = 1 + (count / max_count) * 8
                 ax.annotate(
                     "",
                     xy=(x1, y1),
                     xytext=(x0, y0),
                     arrowprops=dict(arrowstyle="->", color="darkred", linewidth=width, alpha=0.7),
                 )
+
         for _, row in gdf.iterrows():
             ax.text(row["centroid"].x, row["centroid"].y, row["district_name"], ha="center", fontsize=8)
+
         ax.set_title("Heatmap der Stadtteilbeziehungen in Karlsruhe")
         ax.axis("off")
         plt.savefig(HEATMAP_STADTBEZIEHUNGEN_PATH, bbox_inches="tight")
         plt.close()
 
-    # === 1.2 Karte beliebter Arbeits- und Freizeitziele ===
-    def get_popular(df_sub):
-        counts = df_sub["Zielort"].value_counts()
-        return counts[counts >= 3]
+# === 1.2 Karte beliebter Arbeits- und Freizeitziele ===
+def get_popular(df_sub):
+    counts = df_sub["Zielort"].value_counts()
+    return counts[counts >= 3]
 
-    arbeit_pop = get_popular(df.query("Zweck == 'Arbeit' and Zielort.notna() and `Stadtteil Ziel`.notna()"))
-    frei_pop = get_popular(
-        df.query("Zweck == 'Freizeit' and Zielort.notna() and `Stadtteil Ziel`.notna()")
-    )
+arbeit_pop = get_popular(df.query("Zweck == 'Arbeit' and Zielort.notna() and `Stadtteil Ziel`.notna()"))
+frei_pop = get_popular(df.query("Zweck == 'Freizeit' and Zielort.notna() and `Stadtteil Ziel`.notna()"))
 
-    if arbeit_pop.empty and frei_pop.empty:
-        print("ℹ️ Keine häufigen Arbeits- oder Freizeitziele gefunden.")
-    else:
-        fig, ax = plt.subplots(figsize=(12, 12))
-        gdf.plot(ax=ax, facecolor="none", edgecolor="black", linewidth=0.5)
+if arbeit_pop.empty and frei_pop.empty:
+    print("ℹ️ Keine häufigen Arbeits- oder Freizeitziele gefunden.")
+else:
+    fig2, ax2 = plt.subplots(figsize=(12, 12))
+    gdf.plot(ax=ax2, facecolor="none", edgecolor="black", linewidth=0.5)
 
-        texts = []
-        # Arbeitsziele
-        for ziel, cnt in arbeit_pop.items():
-            district = df.loc[df["Zielort"] == ziel, "Stadtteil Ziel"].iloc[0]
-            if district in centroid_dict:
-                pt = centroid_dict[district]
-                ax.scatter(pt.x, pt.y, color="red", s=80, label="Arbeitsziel" if "Arbeitsziel" not in ax.get_legend_handles_labels()[1] else "", zorder=5)
-                texts.append(ax.text(pt.x, pt.y, f"{ziel} ({int(cnt)}-Mal)", fontsize=8, color="darkred"))
+    # Arbeitsziele
+    for ziel, cnt in arbeit_pop.items():
+        district = df.loc[df["Zielort"] == ziel, "Stadtteil Ziel"].iloc[0]
+        if district in centroid_dict:
+            pt = centroid_dict[district]
+            ax2.scatter(pt.x, pt.y, color="red", s=80, label="Arbeitsziel" if "Arbeitsziel" not in ax2.get_legend_handles_labels()[1] else "", zorder=5)
+            ax2.text(pt.x, pt.y, f"{ziel} ({int(cnt)}-Mal)", fontsize=8, color="darkred", ha='center', va='bottom')
 
-        # Freizeitziele
-        for ziel, cnt in frei_pop.items():
-            district = df.loc[df["Zielort"] == ziel, "Stadtteil Ziel"].iloc[0]
-            if district in centroid_dict:
-                pt = centroid_dict[district]
-                ax.scatter(pt.x, pt.y, color="green", s=80, label="Freizeitziel" if "Freizeitziel" not in ax.get_legend_handles_labels()[1] else "", zorder=5)
-                texts.append(ax.text(pt.x, pt.y, f"{ziel} ({int(cnt)}-Mal)", fontsize=8, color="darkgreen"))
+    # Freizeitziele
+    for ziel, cnt in frei_pop.items():
+        district = df.loc[df["Zielort"] == ziel, "Stadtteil Ziel"].iloc[0]
+        if district in centroid_dict:
+            pt = centroid_dict[district]
+            ax2.scatter(pt.x, pt.y, color="green", s=80, label="Freizeitziel" if "Freizeitziel" not in ax2.get_legend_handles_labels()[1] else "", zorder=5)
+            ax2.text(pt.x, pt.y, f"{ziel} ({int(cnt)}-Mal)", fontsize=8, color="darkgreen", ha='center', va='bottom')
 
-        adjust_text(texts)
-
-        ax.legend(loc="upper right")
-        ax.set_title("Karte beliebter Arbeits- und Freizeitziele")
-        ax.axis("off")
-        plt.savefig(HEATMAP_ZIELE_PATH, bbox_inches="tight")
-        plt.close()
+    ax2.legend(loc="upper right")
+    ax2.set_title("Karte beliebter Arbeits- und Freizeitziele")
+    ax2.axis("off")
+    plt.savefig(HEATMAP_ZIELE_PATH, bbox_inches="tight")
+    plt.close()
 
 # === 2. Stadtteile-Ranking ===
 start_ranking = df_valid["Stadtteil Start"].value_counts().reset_index()
