@@ -5,6 +5,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 import geopandas as gpd
+from adjustText import adjust_text
 
 # === Hauptpfade ===
 BASE_FOLDER = "7_Part 4 Graphics and tables"
@@ -15,7 +16,7 @@ PNG_FOLDER = os.path.join(BASE_FOLDER, "png-files")
 # === Pfade für Heatmaps ===
 SHAPEFILE_PATH = os.path.join("2_Shapefile folder", "Stadtteile_Karlsruhe.shp")
 HEATMAP_STADTBEZIEHUNGEN_PATH = os.path.join(PNG_FOLDER, "Stadtteilbeziehungen_Heatmap.png")
-HEATMAP_ARBEITSZIELE_PATH = os.path.join(PNG_FOLDER, "Heatmap_Arbeitsziele.png")
+HEATMAP_ZIELE_PATH = os.path.join(PNG_FOLDER, "Beliebte Arbeits- und Freizeitziele.png")
 
 # === Eingabepfad ===
 CSV_PATH = os.path.join("3_Data for analysis", "wegetagebuch_karlsruhe_koordinaten.csv")
@@ -100,7 +101,7 @@ output_df.to_csv(OUTPUT_CSV_PATH, index=False, encoding='utf-8-sig')
 output_df.to_excel(OUTPUT_XLSX_PATH, index=False)
 format_excel(OUTPUT_XLSX_PATH)
 
-# === Shapefile laden und Grunddaten für Heatmaps ===
+# === Shapefile laden ===
 try:
     gdf = gpd.read_file(SHAPEFILE_PATH)
 except Exception as e:
@@ -120,18 +121,14 @@ if gdf is not None:
     # === 1.1 Heatmap der Stadtteilbeziehungen ===
     rel_df = output_df.dropna(subset=['Stadtteil Start', 'Stadtteil Ziel'])
     rel_df = rel_df[(rel_df['Stadtteil Start'] != 'Restliche Wege') & (rel_df['Stadtteil Ziel'] != '')]
-    if rel_df.empty:
-        print('Keine Stadtteilbeziehungen zum Anzeigen.')
-    else:
+    if not rel_df.empty:
         flow_start = rel_df.groupby('Stadtteil Start')['Anzahl Wege'].sum()
         flow_target = rel_df.groupby('Stadtteil Ziel')['Anzahl Wege'].sum()
         flow_total = flow_start.add(flow_target, fill_value=0)
         gdf['flow_sum'] = gdf['district_name'].map(flow_total).fillna(0)
         max_count = rel_df['Anzahl Wege'].max()
         fig, ax = plt.subplots(figsize=(12, 12))
-        # Choropleth
         gdf.plot(ax=ax, column='flow_sum', cmap='Reds', edgecolor='black', linewidth=0.5)
-        # Pfeile
         for _, row in rel_df.iterrows():
             start = row['Stadtteil Start']
             target = row['Stadtteil Ziel']
@@ -141,7 +138,6 @@ if gdf is not None:
                 x1, y1 = centroid_dict[target].x, centroid_dict[target].y
                 width = 1 + (count / max_count) * 8
                 ax.annotate('', xy=(x1, y1), xytext=(x0, y0), arrowprops=dict(arrowstyle='->', color='darkred', linewidth=width, alpha=0.7))
-        # Beschriftung
         for _, row in gdf.iterrows():
             x, y = row['centroid'].x, row['centroid'].y
             ax.text(x, y, row['district_name'], ha='center', fontsize=8)
@@ -149,30 +145,55 @@ if gdf is not None:
         ax.axis('off')
         plt.savefig(HEATMAP_STADTBEZIEHUNGEN_PATH, bbox_inches='tight')
         plt.close()
-        print(f'✅ Stadtteilbeziehungen-Heatmap erstellt: {HEATMAP_STADTBEZIEHUNGEN_PATH}')
 
-    # === 1.2 Heatmap beliebter Arbeitsziele ===
+    # === 1.2 Karte beliebter Arbeits- und Freizeitziele ===
+    # Arbeitsziele
     arbeit_df = df[df['Zweck'] == 'Arbeit'].dropna(subset=['Zielort', 'Stadtteil Ziel'])
-    zielort_counts = arbeit_df['Zielort'].value_counts()
-    popular_zielorte = zielort_counts[zielort_counts >= 3].index.tolist()
-    if not popular_zielorte:
-        print('Keine häufigen Arbeitsziele zum Anzeigen.')
+    arbeit_counts = arbeit_df['Zielort'].value_counts()
+    popular_arbeit = arbeit_counts[arbeit_counts >= 3]
+    # Freizeitziele
+    frei_df = df[df['Zweck'] == 'Freizeit'].dropna(subset=['Zielort', 'Stadtteil Ziel'])
+    frei_counts = frei_df['Zielort'].value_counts()
+    popular_frei = frei_counts[frei_counts >= 3]
+
+    if popular_arbeit.empty and popular_frei.empty:
+        print('Keine häufigen Arbeits- oder Freizeitziele zum Anzeigen.')
     else:
-        fig2, ax2 = plt.subplots(figsize=(12, 12))
-        # Kein Schraffieren der Stadtteile
-        gdf.plot(ax=ax2, facecolor='none', edgecolor='black', linewidth=0.5)
-        # Punkte und Beschriftung
-        for zielort in popular_zielorte:
-            # Ersten Datensatz zum Zielort auswählen
-            entry = arbeit_df[arbeit_df['Zielort'] == zielort].iloc[0]
-            district = entry['Stadtteil Ziel']
+        fig3, ax3 = plt.subplots(figsize=(12, 12))
+        # Stadtteile als Konturen
+        gdf.plot(ax=ax3, facecolor='none', edgecolor='black', linewidth=0.5)
+        # Arbeitsziele scatter
+        arbeits_x, arbeits_y, arbeits_labels = [], [], []
+        for ziel, count in popular_arbeit.items():
+            district = arbeit_df[arbeit_df['Zielort'] == ziel]['Stadtteil Ziel'].iloc[0]
             if district in centroid_dict:
-                x, y = centroid_dict[district].x, centroid_dict[district].y
-                ax2.scatter(x, y, color='red', s=80, zorder=5)
-                ax2.text(x, y, zielort, ha='center', va='bottom', fontsize=8, color='darkred')
-        ax2.set_title('Heatmap beliebter Arbeitsziele in Karlsruhe')
-        ax2.axis('off')
-        plt.savefig(HEATMAP_ARBEITSZIELE_PATH, bbox_inches='tight')
+                pt = centroid_dict[district]
+                arbeits_x.append(pt.x)
+                arbeits_y.append(pt.y)
+                arbeits_labels.append(f"{ziel} ({int(count)}-Mal)")
+        h1 = ax3.scatter(arbeits_x, arbeits_y, color='red', s=80, label='Arbeitsziel', zorder=5)
+        # Freizeitziele scatter
+        frei_x, frei_y, frei_labels = [], [], []
+        for ziel, count in popular_frei.items():
+            district = frei_df[frei_df['Zielort'] == ziel]['Stadtteil Ziel'].iloc[0]
+            if district in centroid_dict:
+                pt = centroid_dict[district]
+                frei_x.append(pt.x)
+                frei_y.append(pt.y)
+                frei_labels.append(f"{ziel} ({int(count)}-Mal)")
+        h2 = ax3.scatter(frei_x, frei_y, color='green', s=80, label='Freizeitziel', zorder=5)
+        # Beschriftungen ohne Überlappung
+        texts = []
+        for x, y, txt in zip(arbeits_x, arbeits_y, arbeits_labels):
+            texts.append(ax3.text(x, y, txt, fontsize=8, color='darkred'))
+        for x, y, txt in zip(frei_x, frei_y, frei_labels):
+            texts.append(ax3.text(x, y, txt, fontsize=8, color='darkgreen'))
+        adjust_text(texts)
+        # Legende und Titel
+        ax3.legend(loc='upper right')
+        ax3.set_title('Karte beliebter Arbeits- und Freizeitziele')
+        ax3.axis('off')
+        plt.savefig(HEATMAP_ZIELE_PATH, bbox_inches='tight')
         plt.close()
 
 # === 2. Stadtteile-Ranking ===
