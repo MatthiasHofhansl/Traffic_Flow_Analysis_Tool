@@ -12,9 +12,10 @@ CSV_FOLDER = os.path.join(BASE_FOLDER, "csv-files")
 XLSX_FOLDER = os.path.join(BASE_FOLDER, "xlsx-files")
 PNG_FOLDER = os.path.join(BASE_FOLDER, "png-files")
 
-# === Pfade für Heatmap ===
+# === Pfade für Heatmaps ===
 SHAPEFILE_PATH = os.path.join("2_Shapefile folder", "Stadtteile_Karlsruhe.shp")
 HEATMAP_PNG_PATH = os.path.join(PNG_FOLDER, "Stadtteilbeziehungen_Heatmap.png")
+HEATMAP_ARBEITSZIELE_PATH = os.path.join(PNG_FOLDER, "Heatmap_Arbeitsziele.png")
 
 # === Eingabepfad ===
 CSV_PATH = os.path.join("3_Data for analysis", "wegetagebuch_karlsruhe_koordinaten.csv")
@@ -390,5 +391,25 @@ spitzenstunde_df = pd.DataFrame({"Spitzenstunde": [zeitfenster]})
 spitzenstunde_df.to_csv(SPITZENSTUNDE_CSV_PATH, index=False, encoding='utf-8-sig')
 spitzenstunde_df.to_excel(SPITZENSTUNDE_XLSX_PATH, index=False)
 format_excel(SPITZENSTUNDE_XLSX_PATH)
+
+# === 16. Heatmap beliebter Arbeitsziele
+# Filter für Arbeitszweck
+arbeit_df = df[df['Zweck'] == 'Arbeit']
+arbeit_counts = arbeit_df['Stadtteil Ziel'].value_counts()
+popular_targets = arbeit_counts[arbeit_counts >= 3].index.tolist()
+if not popular_targets:
+    print('Keine häufigen Arbeitsziele zum Anzeigen.')
+else:
+    fig2, ax2 = plt.subplots(figsize=(12, 12))
+    gdf.plot(ax=ax2, column='flow_sum', cmap='Reds', edgecolor='black', linewidth=0.5)
+    for target in popular_targets:
+        if target in centroid_dict:
+            x, y = centroid_dict[target].x, centroid_dict[target].y
+            ax2.scatter(x, y, color='red', s=80, zorder=5)
+            ax2.text(x, y, target, horizontalalignment='center', verticalalignment='bottom', fontsize=8, color='darkred')
+    ax2.set_title('Heatmap beliebter Arbeitsziele in Karlsruhe')
+    ax2.axis('off')
+    plt.savefig(HEATMAP_ARBEITSZIELE_PATH, bbox_inches='tight')
+    plt.close()
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")

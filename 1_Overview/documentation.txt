@@ -76,7 +76,7 @@ Aufbau der Präsentation
 
         - 16. In welcher Stunde wurden am meisten Wege gegangen? Erledigt!
 
-        - 17. Heatmaps für Arbeits- und Freizeitziele ---(TO DO)---
+        - 17. Heatmaps für Arbeits- (Ziel sollte hierfür mindestens 3-Mal vorkommen) und Freizeitziele ---(TO DO)---
 
         Tabelle realistischer machen! ---(TO DO)---
 
