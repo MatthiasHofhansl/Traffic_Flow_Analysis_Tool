@@ -108,26 +108,36 @@ try:
 except Exception as e:
     print(f"Fehler beim Laden der Shapedatei: {e}")
 else:
-    # Detect district name column
+    # District name column detection
     string_cols = gdf.select_dtypes(include=['object']).columns.tolist()
     possible = [col for col in string_cols if 'name' in col.lower() or 'stadtteil' in col.lower()]
     name_col = possible[0] if possible else string_cols[0]
     gdf['district_name'] = gdf[name_col]
+
     # Compute centroids
     gdf['centroid'] = gdf.geometry.centroid
-    # Create mapping
-    centroid_dict = dict(zip(gdf['district_name'], gdf['centroid']))
+
     # Load relationship data
     rel_df = pd.read_csv(OUTPUT_CSV_PATH)
     rel_df = rel_df.dropna(subset=['Stadtteil Start', 'Stadtteil Ziel'])
     rel_df = rel_df[(rel_df['Stadtteil Start'] != 'Restliche Wege') & (rel_df['Stadtteil Ziel'] != '')]
+
     if rel_df.empty:
         print('Keine Stadtteilbeziehungen zum Anzeigen.')
     else:
+        # Compute flow sum per district for shading
+        flow_start = rel_df.groupby('Stadtteil Start')['Anzahl Wege'].sum()
+        flow_target = rel_df.groupby('Stadtteil Ziel')['Anzahl Wege'].sum()
+        flow_total = flow_start.add(flow_target, fill_value=0)
+        gdf['flow_sum'] = gdf['district_name'].map(flow_total).fillna(0)
+
         max_count = rel_df['Anzahl Wege'].max()
         fig, ax = plt.subplots(figsize=(12, 12))
-        gdf.plot(ax=ax, edgecolor='black', facecolor='lightgrey')
-        # Plot arrows
+        # Plot choropleth shading
+        gdf.plot(ax=ax, column='flow_sum', cmap='Reds', edgecolor='black', linewidth=0.5)
+
+        # Plot arrows with increased width
+        centroid_dict = dict(zip(gdf['district_name'], gdf['centroid']))
         for _, row in rel_df.iterrows():
             start = row['Stadtteil Start']
             target = row['Stadtteil Ziel']
@@ -135,14 +145,16 @@ else:
             if start in centroid_dict and target in centroid_dict:
                 x_start, y_start = centroid_dict[start].x, centroid_dict[start].y
                 x_end, y_end = centroid_dict[target].x, centroid_dict[target].y
-                width = (count / max_count) * 5
+                # Increased arrow width
+                width = 1 + (count / max_count) * 8
                 ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start),
-                            arrowprops=dict(arrowstyle='->', color='red', linewidth=width, alpha=0.6))
+                            arrowprops=dict(arrowstyle='->', color='darkred', linewidth=width, alpha=0.7))
         # Label districts
         for _, row in gdf.iterrows():
             x, y = row['centroid'].x, row['centroid'].y
             name = row['district_name']
             ax.text(x, y, name, horizontalalignment='center', fontsize=8)
+
         ax.set_title('Heatmap der Stadtteilbeziehungen in Karlsruhe')
         ax.axis('off')
         plt.savefig(HEATMAP_PNG_PATH, bbox_inches='tight')
