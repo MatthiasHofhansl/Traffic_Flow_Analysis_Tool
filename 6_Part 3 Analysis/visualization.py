@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
+import geopandas as gpd
 
 # === Hauptpfade ===
 BASE_FOLDER = "7_Part 4 Graphics and tables"
@@ -11,10 +12,14 @@ CSV_FOLDER = os.path.join(BASE_FOLDER, "csv-files")
 XLSX_FOLDER = os.path.join(BASE_FOLDER, "xlsx-files")
 PNG_FOLDER = os.path.join(BASE_FOLDER, "png-files")
 
-# === Eingabepfad
+# === Pfade für Heatmap ===
+SHAPEFILE_PATH = os.path.join("2_Shapefile folder", "Stadtteile_Karlsruhe.shp")
+HEATMAP_PNG_PATH = os.path.join(PNG_FOLDER, "Stadtteilbeziehungen_Heatmap.png")
+
+# === Eingabepfad ===
 CSV_PATH = os.path.join("3_Data for analysis", "wegetagebuch_karlsruhe_koordinaten.csv")
 
-# === Alle Ausgabepfade
+# === Alle Ausgabepfade ===
 OUTPUT_CSV_PATH = os.path.join(CSV_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.csv")
 OUTPUT_XLSX_PATH = os.path.join(XLSX_FOLDER, "Stadtteilbeziehungen_Wegeanzahl.xlsx")
 RANKING_CSV_PATH = os.path.join(CSV_FOLDER, "Stadtteile_Ranking.csv")
@@ -49,7 +54,7 @@ PERSONEN_ANZAHL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Anzahl befragter Personen
 SPITZENSTUNDE_CSV_PATH = os.path.join(CSV_FOLDER, "Spitzenstunde.csv")
 SPITZENSTUNDE_XLSX_PATH = os.path.join(XLSX_FOLDER, "Spitzenstunde.xlsx")
 
-# === Hilfsfunktion: Excel-Dateien formatieren
+# === Hilfsfunktion: Excel-Dateien formatieren ===
 def format_excel(filepath):
     wb = load_workbook(filepath)
     ws = wb.active
@@ -64,17 +69,17 @@ def format_excel(filepath):
     ws.auto_filter.ref = ws.dimensions
     wb.save(filepath)
 
-# === Daten einlesen
+# === Daten einlesen ===
 df = pd.read_csv(CSV_PATH)
 
-# === Vorbereitungen: Startzeit und Datum
+# === Vorbereitungen: Startzeit und Datum ===
 df["Startzeit"] = pd.to_datetime(df["Startzeit"], errors='coerce')
 df["Datum"] = df["Startzeit"].dt.date
 
-# === 1. Stadtteilbeziehungen
+# === 1. Stadtteilbeziehungen ===
 df_valid = df.dropna(subset=["Stadtteil Start", "Stadtteil Ziel"])
 weg_counts = (
-    df_valid.groupby(["Stadtteil Start", "Stadtteil Ziel"])
+    df_valid.groupby(["Stadtteil Start", "Stadtteil Ziel"])  
     .size()
     .reset_index(name="Anzahl Wege")
     .sort_values(by="Anzahl Wege", ascending=False)
@@ -96,7 +101,54 @@ output_df.to_csv(OUTPUT_CSV_PATH, index=False, encoding='utf-8-sig')
 output_df.to_excel(OUTPUT_XLSX_PATH, index=False)
 format_excel(OUTPUT_XLSX_PATH)
 
-# === 2. Stadtteile-Ranking
+# === 1.1 Heatmap der Stadtteilbeziehungen ===
+# Load shapefile
+try:
+    gdf = gpd.read_file(SHAPEFILE_PATH)
+except Exception as e:
+    print(f"Fehler beim Laden der Shapedatei: {e}")
+else:
+    # Detect district name column
+    string_cols = gdf.select_dtypes(include=['object']).columns.tolist()
+    possible = [col for col in string_cols if 'name' in col.lower() or 'stadtteil' in col.lower()]
+    name_col = possible[0] if possible else string_cols[0]
+    gdf['district_name'] = gdf[name_col]
+    # Compute centroids
+    gdf['centroid'] = gdf.geometry.centroid
+    # Create mapping
+    centroid_dict = dict(zip(gdf['district_name'], gdf['centroid']))
+    # Load relationship data
+    rel_df = pd.read_csv(OUTPUT_CSV_PATH)
+    rel_df = rel_df.dropna(subset=['Stadtteil Start', 'Stadtteil Ziel'])
+    rel_df = rel_df[(rel_df['Stadtteil Start'] != 'Restliche Wege') & (rel_df['Stadtteil Ziel'] != '')]
+    if rel_df.empty:
+        print('Keine Stadtteilbeziehungen zum Anzeigen.')
+    else:
+        max_count = rel_df['Anzahl Wege'].max()
+        fig, ax = plt.subplots(figsize=(12, 12))
+        gdf.plot(ax=ax, edgecolor='black', facecolor='lightgrey')
+        # Plot arrows
+        for _, row in rel_df.iterrows():
+            start = row['Stadtteil Start']
+            target = row['Stadtteil Ziel']
+            count = row['Anzahl Wege']
+            if start in centroid_dict and target in centroid_dict:
+                x_start, y_start = centroid_dict[start].x, centroid_dict[start].y
+                x_end, y_end = centroid_dict[target].x, centroid_dict[target].y
+                width = (count / max_count) * 5
+                ax.annotate('', xy=(x_end, y_end), xytext=(x_start, y_start),
+                            arrowprops=dict(arrowstyle='->', color='red', linewidth=width, alpha=0.6))
+        # Label districts
+        for _, row in gdf.iterrows():
+            x, y = row['centroid'].x, row['centroid'].y
+            name = row['district_name']
+            ax.text(x, y, name, horizontalalignment='center', fontsize=8)
+        ax.set_title('Heatmap der Stadtteilbeziehungen in Karlsruhe')
+        ax.axis('off')
+        plt.savefig(HEATMAP_PNG_PATH, bbox_inches='tight')
+        plt.close()
+
+# === 2. Stadtteile-Ranking ===
 start_ranking = df_valid["Stadtteil Start"].value_counts().reset_index()
 start_ranking.columns = ["Start Stadtteil", "Anzahl Starts"]
 ziel_ranking = df_valid["Stadtteil Ziel"].value_counts().reset_index()
