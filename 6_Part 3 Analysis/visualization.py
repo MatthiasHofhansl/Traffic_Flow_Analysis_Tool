@@ -46,6 +46,8 @@ WEGE_ANZAHL_CSV_PATH = os.path.join(CSV_FOLDER, "Anzahl aufgezeichneter Wege.csv
 WEGE_ANZAHL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Anzahl aufgezeichneter Wege.xlsx")
 PERSONEN_ANZAHL_CSV_PATH = os.path.join(CSV_FOLDER, "Anzahl befragter Personen.csv")
 PERSONEN_ANZAHL_XLSX_PATH = os.path.join(XLSX_FOLDER, "Anzahl befragter Personen.xlsx")
+SPITZENSTUNDE_CSV_PATH = os.path.join(CSV_FOLDER, "Spitzenstunde.csv")
+SPITZENSTUNDE_XLSX_PATH = os.path.join(XLSX_FOLDER, "Spitzenstunde.xlsx")
 
 # === Hilfsfunktion: Excel-Dateien formatieren
 def format_excel(filepath):
@@ -309,5 +311,20 @@ anzahl_personen_df = pd.DataFrame({"Anzahl befragter Personen": [anzahl_personen
 anzahl_personen_df.to_csv(PERSONEN_ANZAHL_CSV_PATH, index=False, encoding='utf-8-sig')
 anzahl_personen_df.to_excel(PERSONEN_ANZAHL_XLSX_PATH, index=False)
 format_excel(PERSONEN_ANZAHL_XLSX_PATH)
+
+# === 15. Spitzenstunde Auswertung
+df_spitze = df.dropna(subset=["Startzeit"])
+df_spitze["Stunde"] = df_spitze["Startzeit"].dt.hour
+
+stunde_counts = df_spitze["Stunde"].value_counts().sort_values(ascending=False)
+spitzenstunde = stunde_counts.idxmax()
+
+zeitfenster = f"{spitzenstunde:02d}:00 Uhr bis {spitzenstunde + 1:02d}:00 Uhr"
+
+spitzenstunde_df = pd.DataFrame({"Spitzenstunde": [zeitfenster]})
+
+spitzenstunde_df.to_csv(SPITZENSTUNDE_CSV_PATH, index=False, encoding='utf-8-sig')
+spitzenstunde_df.to_excel(SPITZENSTUNDE_XLSX_PATH, index=False)
+format_excel(SPITZENSTUNDE_XLSX_PATH)
 
 print("✅ Alle Dateien erfolgreich erstellt und gespeichert.")
